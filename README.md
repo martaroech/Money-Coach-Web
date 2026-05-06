@@ -12,12 +12,10 @@ Versione web nativa di Money Coach, senza build tool obbligatori:
 ## File principali
 
 - `index.html`
-- `assets/js/app.js`
-- `assets/less/styles.less`
-- `assets/css/styles.css`
+- `scripts/app.js`
+- `styles/style.less`
+- `style/style-min.css`
 
-`styles.css` e allineato a `styles.less` per poter aprire subito l'app. Se modifichi
-il LESS, ricompilalo tu in `assets/css/styles.css`.
 
 ## Pubblicazione GitHub Pages
 
