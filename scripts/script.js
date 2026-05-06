@@ -152,8 +152,8 @@ function renderDashboard() {
   const summary = summarize(state.transactions);
   const hasData = state.transactions.length > 0;
 
-  setText('heroKicker', hasData ? 'Uscite importate' : 'Importa Revolut');
-  setText('heroAmount', hasData ? formatMoney(summary.spending) : 'CSV aprile');
+  setText('heroKicker', hasData ? 'Uscite importate' : 'Importa CSV da Revolut.');
+  setText('heroAmount', hasData ? formatMoney(summary.spending) : '');
   setText(
     'heroCopy',
     hasData
