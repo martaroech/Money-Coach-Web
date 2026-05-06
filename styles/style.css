@@ -78,7 +78,6 @@ input {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 26px;
   color: #f1cdd3;
   font-size: 13px;
   font-weight: 800;
@@ -422,4 +421,55 @@ input {
 .toast-message.show {
   opacity: 1;
   transform: translateY(0);
+}
+.btn-brand {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #b80022;
+  --bs-btn-border-color: #b80022;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #99001c;
+  --bs-btn-hover-border-color: #99001c;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #8f001a;
+  --bs-btn-active-border-color: #8f001a;
+}
+.btn-brand-soft {
+  --bs-btn-color: #b80022;
+  --bs-btn-bg: #f1cdd3;
+  --bs-btn-border-color: #f1cdd3;
+  --bs-btn-hover-color: #b80022;
+  --bs-btn-hover-bg: #ebb9c1;
+  --bs-btn-hover-border-color: #ebb9c1;
+}
+.card {
+  --bs-card-border-radius: 8px;
+  --bs-card-bg: #ffffff;
+}
+.nav-pills {
+  --bs-nav-pills-border-radius: 8px;
+  --bs-nav-pills-link-active-bg: #f1cdd3;
+  --bs-nav-pills-link-active-color: #b80022;
+}
+.nav-link {
+  color: #66736d;
+  font-weight: 800;
+}
+.nav-link:hover {
+  color: #b80022;
+}
+.input-group {
+  border-radius: 8px;
+  background: #ffffff;
+}
+.input-group-text,
+.form-control {
+  min-height: 48px;
+}
+.form-control:focus {
+  background: #ffffff;
+  box-shadow: 0 0 0 0.18rem rgba(184, 0, 34, 0.16);
+}
+.text-bg-light {
+  background: #ffffff !important;
+  color: #66736d !important;
 }

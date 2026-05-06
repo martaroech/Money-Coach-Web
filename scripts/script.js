@@ -186,7 +186,7 @@ function renderExpenses() {
   const base = state.transactions.filter((item) => item.countsAsSpending || (item.isIncome && !item.isInternalTransfer));
   const categories = ['Tutte', ...sortCategories([...new Set(base.map((item) => item.category))])];
   document.getElementById('categoryFilters').innerHTML = categories
-    .map((category) => `<button class="chip ${state.expenseFilter === category ? 'active' : ''}" type="button" data-filter="${escapeHtml(category)}">${escapeHtml(category)}</button>`)
+    .map((category) => `<button class="btn btn-sm rounded-pill ${state.expenseFilter === category ? 'btn-brand' : 'btn-outline-secondary'}" type="button" data-filter="${escapeHtml(category)}">${escapeHtml(category)}</button>`)
     .join('');
   document.querySelectorAll('[data-filter]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -454,19 +454,23 @@ function groupTransactions(transactions) {
 }
 
 function metricCard(label, value, icon, color) {
-  return `<article class="metric-card">
-    <i class="fa-solid ${icon}" style="color:${color}"></i>
-    <div>
-      <strong>${escapeHtml(value)}</strong>
-      <span>${escapeHtml(label)}</span>
-    </div>
-  </article>`;
+  return `<div class="col-6">
+    <article class="card metric-card border-0 h-100">
+      <div class="card-body">
+        <i class="fa-solid ${icon}" style="color:${color}"></i>
+        <div>
+          <strong>${escapeHtml(value)}</strong>
+          <span>${escapeHtml(label)}</span>
+        </div>
+      </div>
+    </article>
+  </div>`;
 }
 
 function renderCategoryBreakdown(categoryTotals) {
   const entries = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
   const total = entries.reduce((acc, [, value]) => acc + value, 0);
-  return `<article class="data-card">${entries.slice(0, 7).map(([category, value]) => {
+  return `<article class="card data-card border-0"><div class="card-body">${entries.slice(0, 7).map(([category, value]) => {
     const percent = total ? (value / total) * 100 : 0;
     return `<div class="breakdown-row">
       <div class="breakdown-label">
@@ -474,40 +478,40 @@ function renderCategoryBreakdown(categoryTotals) {
         <strong>${escapeHtml(category)}</strong>
         <span>${formatMoney(value)}</span>
       </div>
-      <div class="progress"><div class="progress-bar" style="width:${percent}%;background:${colorFor(category)}"></div></div>
+      <div class="progress" role="progressbar" aria-valuenow="${percent.toFixed(0)}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:${percent}%;background:${colorFor(category)}"></div></div>
     </div>`;
-  }).join('')}</article>`;
+  }).join('')}</div></article>`;
 }
 
 function groupCard(group) {
   const expanded = state.expandedCategories.has(group.category);
-  return `<article class="data-card group-card">
-    <button class="group-head" type="button" data-group="${escapeHtml(group.category)}">
+  return `<article class="card data-card group-card border-0">
+    <button class="btn group-head d-flex align-items-center gap-3 text-start" type="button" data-group="${escapeHtml(group.category)}">
       <span class="category-icon" style="background:${alpha(colorFor(group.category), 0.14)};color:${colorFor(group.category)}">
         <i class="fa-solid ${iconFor(group.category)}"></i>
       </span>
-      <span class="group-title">
+      <span class="group-title flex-grow-1 min-w-0">
         <strong>${escapeHtml(group.category)}</strong>
-        <small>${group.items.length} movimenti</small>
+        <small class="text-secondary">${group.items.length} movimenti</small>
       </span>
-      <span class="group-total">
+      <span class="group-total text-end">
         <strong>${formatMoney(group.total)}</strong>
         <i class="fa-solid ${expanded ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
       </span>
     </button>
-    ${expanded ? `<div class="compact-list">${group.items.map(compactTransactionRow).join('')}</div>` : ''}
+    ${expanded ? `<div class="list-group list-group-flush compact-list">${group.items.map(compactTransactionRow).join('')}</div>` : ''}
   </article>`;
 }
 
 function transactionCard(item) {
   const color = item.isIncome ? '#b80022' : colorFor(item.category);
-  return `<article class="data-card transaction-card">
+  return `<article class="card data-card transaction-card border-0">
     <span class="category-icon" style="background:${alpha(color, 0.14)};color:${color}">
       <i class="fa-solid ${iconFor(item.category)}"></i>
     </span>
-    <span class="transaction-main">
+    <span class="transaction-main flex-grow-1 min-w-0">
       <strong>${escapeHtml(item.description)}</strong>
-      <small>${escapeHtml(item.category)} · ${dateLabel(item.completedAt)}</small>
+      <small class="text-secondary">${escapeHtml(item.category)} · ${dateLabel(item.completedAt)}</small>
     </span>
     <strong class="transaction-amount" style="color:${color}">${item.isIncome ? '+' : '-'}${formatMoney(item.absoluteAmount)}</strong>
   </article>`;
@@ -515,8 +519,8 @@ function transactionCard(item) {
 
 function compactTransactionRow(item) {
   const color = item.isIncome ? '#b80022' : colorFor(item.category);
-  return `<div class="compact-row">
-    <span>${dateLabel(item.completedAt)}</span>
+  return `<div class="list-group-item compact-row">
+    <span class="text-secondary">${dateLabel(item.completedAt)}</span>
     <strong>${escapeHtml(item.description)}</strong>
     <em style="color:${color}">${item.isIncome ? '+' : '-'}${formatMoney(item.absoluteAmount)}</em>
   </div>`;
@@ -525,47 +529,55 @@ function compactTransactionRow(item) {
 function budgetRow(category, spent, budget) {
   const ratio = budget ? Math.min(spent / budget, 1) : 0;
   const left = budget - spent;
-  return `<article class="data-card budget-row">
+  return `<article class="card data-card budget-row border-0">
+    <div class="card-body">
     <div class="breakdown-label">
       <span class="dot" style="background:${colorFor(category)}"></span>
       <strong>${escapeHtml(category)}</strong>
       <span>${formatMoney(spent)} / ${formatMoney(budget)}</span>
     </div>
-    <div class="progress"><div class="progress-bar" style="width:${ratio * 100}%;background:${ratio > 0.86 ? '#e36f54' : colorFor(category)}"></div></div>
-    <small>${left >= 0 ? `Restano ${formatMoney(left)}` : `Sopra di ${formatMoney(Math.abs(left))}`}</small>
+    <div class="progress" role="progressbar" aria-valuenow="${(ratio * 100).toFixed(0)}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:${ratio * 100}%;background:${ratio > 0.86 ? '#e36f54' : colorFor(category)}"></div></div>
+    <small class="text-secondary">${left >= 0 ? `Restano ${formatMoney(left)}` : `Sopra di ${formatMoney(Math.abs(left))}`}</small>
+    </div>
   </article>`;
 }
 
 function coachCard(note) {
   const tone = note.kind === 'good' ? '#b80022' : note.kind === 'warning' ? '#e36f54' : '#547aa5';
   const icon = note.kind === 'good' ? 'fa-circle-check' : note.kind === 'warning' ? 'fa-circle-exclamation' : 'fa-lightbulb';
-  return `<article class="data-card coach-card">
+  return `<article class="card data-card coach-card border-0">
+    <div class="card-body d-flex align-items-start gap-3">
     <span class="category-icon" style="background:${alpha(tone, 0.14)};color:${tone}">
       <i class="fa-solid ${icon}"></i>
     </span>
-    <span>
+    <span class="flex-grow-1 min-w-0">
       <strong>${escapeHtml(note.title)}</strong>
-      <small>${escapeHtml(note.body)}</small>
+      <small class="text-secondary">${escapeHtml(note.body)}</small>
     </span>
+    </div>
   </article>`;
 }
 
 function merchantCard(item) {
-  return `<article class="data-card merchant-card">
+  return `<article class="card data-card merchant-card border-0">
+    <div class="card-body d-flex align-items-center gap-3">
     <span class="dot" style="background:${colorFor(item.category)}"></span>
-    <span>
+    <span class="flex-grow-1 min-w-0">
       <strong>${escapeHtml(item.name)}</strong>
-      <small>${item.count} movimenti · ${escapeHtml(item.category)}</small>
+      <small class="text-secondary">${item.count} movimenti · ${escapeHtml(item.category)}</small>
     </span>
     <strong>${formatMoney(item.total)}</strong>
+    </div>
   </article>`;
 }
 
 function emptyState(icon, title, body) {
-  return `<article class="data-card empty-state">
+  return `<article class="card data-card empty-state border-0">
+    <div class="card-body">
     <i class="fa-solid ${icon}"></i>
     <strong>${escapeHtml(title)}</strong>
-    <small>${escapeHtml(body)}</small>
+    <small class="text-secondary">${escapeHtml(body)}</small>
+    </div>
   </article>`;
 }
 

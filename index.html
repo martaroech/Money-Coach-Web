@@ -20,64 +20,63 @@
     <link rel="stylesheet" href="styles/style-min.css">
   </head>
   <body>
-    <main class="app-shell">
-      <header class="app-header">
+    <main class="app-shell container px-3">
+      <header class="app-header d-flex align-items-center justify-content-between gap-3">
         <div>
-          <p class="eyebrow">Locale e privato</p>
           <h1>Money Coach</h1>
         </div>
-        <button id="importButton" class="icon-btn" type="button" aria-label="Importa CSV Revolut">
+        <button id="importButton" class="btn btn-brand-soft rounded-circle icon-btn" type="button" aria-label="Importa CSV Revolut">
           <i class="fa-solid fa-file-arrow-up"></i>
         </button>
         <input id="csvInput" class="d-none" type="file" accept=".csv,text/csv">
       </header>
 
       <section id="dashboardPage" class="page active" aria-labelledby="dashboardTitle">
-        <div class="hero-panel">
-          <div class="hero-label">
+        <div class="card hero-panel border-0">
+          <div class="hero-label d-flex align-items-center gap-2">
             <i class="fa-solid fa-shield-halved"></i>
             <span>Dati sul dispositivo</span>
           </div>
           <p id="heroKicker">Importa Revolut</p>
           <h2 id="heroAmount">CSV aprile</h2>
           <p id="heroCopy">Carica l'export CSV di Revolut. Il coach categorizza, salva e analizza tutto nel browser.</p>
-          <button id="heroImportButton" class="btn btn-light btn-sm" type="button">
+          <button id="heroImportButton" class="btn btn-light btn-sm fw-bold" type="button">
             <i class="fa-solid fa-file-arrow-up me-2"></i>Importa CSV
           </button>
         </div>
 
-        <div id="metricGrid" class="metric-grid"></div>
+        <div id="metricGrid" class="row g-2 mt-3"></div>
 
-        <div class="section-heading">
+        <div class="section-heading d-flex align-items-end justify-content-between">
           <h2>Categorie</h2>
-          <span id="categoryCount">In attesa</span>
+          <span id="categoryCount" class="badge rounded-pill text-bg-light">In attesa</span>
         </div>
         <div id="categoryBreakdown" class="stack"></div>
 
-        <div class="section-heading">
+        <div class="section-heading d-flex align-items-end justify-content-between">
           <h2>Coach</h2>
-          <span id="coachCount">0 note</span>
+          <span id="coachCount" class="badge rounded-pill text-bg-light">0 note</span>
         </div>
         <div id="coachPreview" class="stack"></div>
       </section>
 
       <section id="expensesPage" class="page" aria-labelledby="expensesTitle">
         <div class="toolbar-stack">
-          <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input id="expenseSearch" type="search" placeholder="Cerca spesa, categoria o importo" autocomplete="off">
+          <div class="input-group search-box">
+            <span class="input-group-text border-0 bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <input id="expenseSearch" class="form-control border-0 shadow-none" type="search" placeholder="Cerca spesa, categoria o importo" autocomplete="off">
           </div>
-          <div class="segmented" role="tablist" aria-label="Vista spese">
-            <button class="active" type="button" data-view="grouped">Gruppi</button>
-            <button type="button" data-view="list">Lista</button>
+          <div class="nav nav-pills nav-fill segmented" role="tablist" aria-label="Vista spese">
+            <button class="nav-link active" type="button" data-view="grouped">Gruppi</button>
+            <button class="nav-link" type="button" data-view="list">Lista</button>
           </div>
-          <div id="categoryFilters" class="chip-row"></div>
+          <div id="categoryFilters" class="chip-row d-flex gap-2 overflow-auto"></div>
         </div>
         <div id="expensesList" class="stack"></div>
       </section>
 
       <section id="budgetPage" class="page" aria-labelledby="budgetTitle">
-        <div class="action-panel">
+        <div class="alert action-panel d-flex gap-3 border-0" role="status">
           <i class="fa-solid fa-bullseye"></i>
           <div>
             <h2>Budget mensile</h2>
@@ -90,13 +89,13 @@
       <section id="coachPage" class="page" aria-labelledby="coachTitle">
         <div id="coachList" class="stack"></div>
 
-        <div class="section-heading">
+        <div class="section-heading d-flex align-items-end justify-content-between">
           <h2>Esercenti top</h2>
-          <span id="merchantCount">0</span>
+          <span id="merchantCount" class="badge rounded-pill text-bg-light">0</span>
         </div>
         <div id="merchantList" class="stack"></div>
 
-        <div class="privacy-panel">
+        <div class="card privacy-panel border-0">
           <div>
             <h2><i class="fa-solid fa-lock me-2"></i>Privacy by design</h2>
             <p>CSV, categorie e analisi restano nel browser. Nessun server e nessuna API obbligatoria.</p>
@@ -107,20 +106,20 @@
         </div>
       </section>
 
-      <nav class="bottom-nav" aria-label="Navigazione principale">
-        <button class="active" type="button" data-page="dashboardPage">
+      <nav class="bottom-nav nav nav-pills nav-fill" aria-label="Navigazione principale">
+        <button class="nav-link active" type="button" data-page="dashboardPage">
           <i class="fa-solid fa-table-cells-large"></i>
           <span>Home</span>
         </button>
-        <button type="button" data-page="expensesPage">
+        <button class="nav-link" type="button" data-page="expensesPage">
           <i class="fa-solid fa-list"></i>
           <span>Spese</span>
         </button>
-        <button type="button" data-page="budgetPage">
+        <button class="nav-link" type="button" data-page="budgetPage">
           <i class="fa-solid fa-chart-column"></i>
           <span>Budget</span>
         </button>
-        <button type="button" data-page="coachPage">
+        <button class="nav-link" type="button" data-page="coachPage">
           <i class="fa-solid fa-wand-magic-sparkles"></i>
           <span>Coach</span>
         </button>
@@ -130,6 +129,6 @@
     <div id="toast" class="toast-message" role="status" aria-live="polite"></div>
 
     <script src="scripts/bootstrap.min.js"></script>
-    <script src="scripts/app.js"></script>
+    <script src="scripts/script-min.js"></script>
   </body>
 </html>
