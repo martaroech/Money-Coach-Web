@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#b80022">
+    <meta name="description" content="Money Coach locale per analizzare spese Revolut da CSV.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Money Coach">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Money Coach</title>
+
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+    <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/vendor/fontawesome/css/fontawesome.min.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Locale e privato</p>
+          <h1>Money Coach</h1>
+        </div>
+        <button id="importButton" class="icon-btn" type="button" aria-label="Importa CSV Revolut">
+          <i class="fa-solid fa-file-arrow-up"></i>
+        </button>
+        <input id="csvInput" class="d-none" type="file" accept=".csv,text/csv">
+      </header>
+
+      <section id="dashboardPage" class="page active" aria-labelledby="dashboardTitle">
+        <div class="hero-panel">
+          <div class="hero-label">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Dati sul dispositivo</span>
+          </div>
+          <p id="heroKicker">Importa Revolut</p>
+          <h2 id="heroAmount">CSV aprile</h2>
+          <p id="heroCopy">Carica l'export CSV di Revolut. Il coach categorizza, salva e analizza tutto nel browser.</p>
+          <button id="heroImportButton" class="btn btn-light btn-sm" type="button">
+            <i class="fa-solid fa-file-arrow-up me-2"></i>Importa CSV
+          </button>
+        </div>
+
+        <div id="metricGrid" class="metric-grid"></div>
+
+        <div class="section-heading">
+          <h2>Categorie</h2>
+          <span id="categoryCount">In attesa</span>
+        </div>
+        <div id="categoryBreakdown" class="stack"></div>
+
+        <div class="section-heading">
+          <h2>Coach</h2>
+          <span id="coachCount">0 note</span>
+        </div>
+        <div id="coachPreview" class="stack"></div>
+      </section>
+
+      <section id="expensesPage" class="page" aria-labelledby="expensesTitle">
+        <div class="toolbar-stack">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="expenseSearch" type="search" placeholder="Cerca spesa, categoria o importo" autocomplete="off">
+          </div>
+          <div class="segmented" role="tablist" aria-label="Vista spese">
+            <button class="active" type="button" data-view="grouped">Gruppi</button>
+            <button type="button" data-view="list">Lista</button>
+          </div>
+          <div id="categoryFilters" class="chip-row"></div>
+        </div>
+        <div id="expensesList" class="stack"></div>
+      </section>
+
+      <section id="budgetPage" class="page" aria-labelledby="budgetTitle">
+        <div class="action-panel">
+          <i class="fa-solid fa-bullseye"></i>
+          <div>
+            <h2>Budget mensile</h2>
+            <p id="budgetIntro">Importa un CSV per confrontare le categorie con limiti sani.</p>
+          </div>
+        </div>
+        <div id="budgetList" class="stack"></div>
+      </section>
+
+      <section id="coachPage" class="page" aria-labelledby="coachTitle">
+        <div id="coachList" class="stack"></div>
+
+        <div class="section-heading">
+          <h2>Esercenti top</h2>
+          <span id="merchantCount">0</span>
+        </div>
+        <div id="merchantList" class="stack"></div>
+
+        <div class="privacy-panel">
+          <div>
+            <h2><i class="fa-solid fa-lock me-2"></i>Privacy by design</h2>
+            <p>CSV, categorie e analisi restano nel browser. Nessun server e nessuna API obbligatoria.</p>
+          </div>
+          <button id="clearDataButton" class="btn btn-outline-danger btn-sm" type="button">
+            <i class="fa-solid fa-trash me-2"></i>Cancella dati locali
+          </button>
+        </div>
+      </section>
+
+      <nav class="bottom-nav" aria-label="Navigazione principale">
+        <button class="active" type="button" data-page="dashboardPage">
+          <i class="fa-solid fa-table-cells-large"></i>
+          <span>Home</span>
+        </button>
+        <button type="button" data-page="expensesPage">
+          <i class="fa-solid fa-list"></i>
+          <span>Spese</span>
+        </button>
+        <button type="button" data-page="budgetPage">
+          <i class="fa-solid fa-chart-column"></i>
+          <span>Budget</span>
+        </button>
+        <button type="button" data-page="coachPage">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Coach</span>
+        </button>
+      </nav>
+    </main>
+
+    <div id="toast" class="toast-message" role="status" aria-live="polite"></div>
+
+    <script src="assets/vendor/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>

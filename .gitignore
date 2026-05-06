@@ -1,0 +1,15 @@
+# Personal finance exports
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.pdf
+bank_exports/
+private_exports/
+local_finance_data/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

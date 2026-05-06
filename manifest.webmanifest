@@ -1,0 +1,23 @@
+{
+  "name": "Money Coach",
+  "short_name": "Money Coach",
+  "description": "Money Coach locale per analizzare spese Revolut da CSV.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f4f0e7",
+  "theme_color": "#b80022",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
