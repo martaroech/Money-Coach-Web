@@ -258,7 +258,6 @@ input {
 .coach-card span,
 .merchant-card span {
   min-width: 0;
-  flex: 1;
 }
 .group-title strong,
 .transaction-main strong,
