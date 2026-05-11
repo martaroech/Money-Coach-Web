@@ -1,9 +1,20 @@
-import { budgets } from './config.js';
 import { groupTransactions, summarize } from './analyzer.js';
+import { applyCategoryToTransaction, buildBudgetPlan, categorySpendingForCurrentMonth } from './budgetPlanner.js';
 import { parseRevolutCsv } from './csvImporter.js';
-import { clearTransactions, loadTransactions, mergeTransactions, saveTransactions } from './storage.js';
 import {
+  clearTransactions,
+  loadCategories,
+  loadSettings,
+  loadTransactions,
+  mergeTransactions,
+  saveCategories,
+  saveSettings,
+  saveTransactions,
+} from './storage.js';
+import {
+  budgetSummaryCard,
   budgetRow,
+  categoryEditor,
   coachCard,
   emptyState,
   groupCard,
@@ -12,7 +23,7 @@ import {
   renderCategoryBreakdown,
   transactionCard,
 } from './templates.js';
-import { escapeHtml, formatMoney, setText, showToast, sortCategories } from './utils.js';
+import { escapeHtml, formatMoney, setCategoryStyles, setText, showToast, sortCategories } from './utils.js';
 
 const state = {
   transactions: [],
@@ -21,11 +32,21 @@ const state = {
   expenseFilter: 'Tutte',
   expenseQuery: '',
   expandedCategories: new Set(),
+  settings: {},
+  categories: [],
 };
 
-export function initApp() {
+export async function initApp() {
   bindEvents();
-  state.transactions = loadTransactions();
+  const [transactions, settings, categories] = await Promise.all([
+    loadTransactions(),
+    loadSettings(),
+    loadCategories(),
+  ]);
+  state.transactions = transactions;
+  state.settings = settings;
+  state.categories = categories;
+  setCategoryStyles(state.categories);
   render();
 }
 
@@ -52,6 +73,7 @@ function bindEvents() {
     state.expenseQuery = event.target.value;
     renderExpenses();
   });
+  document.getElementById('monthlySavingsTarget').addEventListener('change', handleSavingsTargetChange);
   document.getElementById('clearDataButton').addEventListener('click', clearData);
 }
 
@@ -68,7 +90,7 @@ async function handleCsvImport(event) {
     const content = await file.text();
     const result = parseRevolutCsv(content);
     state.transactions = mergeTransactions(state.transactions, result.transactions);
-    saveTransactions(state.transactions);
+    await saveTransactions(state.transactions);
     showToast(
       `Importate ${result.transactions.length} righe da ${file.name}. Saltate: ${result.skippedRows}.`,
     );
@@ -78,9 +100,9 @@ async function handleCsvImport(event) {
   }
 }
 
-function clearData() {
+async function clearData() {
   if (!window.confirm('Cancellare tutte le transazioni salvate in questo browser?')) return;
-  clearTransactions();
+  await clearTransactions();
   state.transactions = [];
   state.expenseFilter = 'Tutte';
   state.expenseQuery = '';
@@ -190,9 +212,9 @@ function renderExpenses() {
   container.innerHTML =
     state.expenseView === 'grouped'
       ? groupTransactions(filtered)
-          .map((group) => groupCard(group, state.expandedCategories.has(group.category)))
+          .map((group) => groupCard(group, state.expandedCategories.has(group.category), state.categories))
           .join('')
-      : filtered.map(transactionCard).join('');
+      : filtered.map((item) => transactionCard(item, state.categories)).join('');
 
   document.querySelectorAll('[data-group]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -205,17 +227,32 @@ function renderExpenses() {
       renderExpenses();
     });
   });
+
+  bindTransactionCategorySelectors();
 }
 
 function renderBudget() {
   const summary = summarize(state.transactions);
+  const plan = buildBudgetPlan(state.transactions, state.categories, state.settings);
   setText(
     'budgetIntro',
-    `Spesa analizzata: ${formatMoney(summary.spending)}. Il coach confronta ogni categoria con un limite sano.`,
+    `Spesa analizzata: ${formatMoney(summary.spending)} su ${plan.monthCount} mesi. Il coach propone limiti coerenti con il tuo obiettivo.`,
   );
-  document.getElementById('budgetList').innerHTML = Object.entries(budgets)
-    .map(([category, budget]) => budgetRow(category, summary.categoryTotals[category] || 0, budget))
+  document.getElementById('monthlySavingsTarget').value = state.settings.monthlySavingsTarget || 0;
+  document.getElementById('budgetSummary').innerHTML = budgetSummaryCard(plan);
+  document.getElementById('budgetList').innerHTML = plan.rows
+    .map((row) =>
+      budgetRow(
+        row.name,
+        categorySpendingForCurrentMonth(state.transactions, row.name),
+        row.budget,
+        row.average,
+        row.suggested,
+      ),
+    )
     .join('');
+  document.getElementById('categoryManager').innerHTML = categoryEditor(state.categories);
+  bindBudgetControls();
 }
 
 function renderCoach() {
@@ -237,3 +274,105 @@ function matchesExpenseSearch(item, query) {
   );
 }
 
+function bindBudgetControls() {
+  document.getElementById('addCategoryButton')?.addEventListener('click', async () => {
+    const name = uniqueCategoryName('Nuova categoria');
+    state.categories.push({
+      id: slugCategory(name),
+      name,
+      color: '#66736d',
+      icon: 'fa-tag',
+      monthlyGoal: 0,
+    });
+    await persistCategories();
+    render();
+  });
+
+  document.querySelectorAll('[data-category-name]').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const previousName = input.dataset.categoryName;
+      const nextName = input.value.trim();
+      if (!nextName) {
+        input.value = previousName;
+        return;
+      }
+
+      state.categories = state.categories.map((category) =>
+        category.name === previousName
+          ? {
+              ...category,
+              id: slugCategory(nextName),
+              name: nextName,
+            }
+          : category,
+      );
+      state.transactions = state.transactions.map((item) =>
+        item.category === previousName ? { ...item, category: nextName } : item,
+      );
+      await Promise.all([persistCategories(), saveTransactions(state.transactions)]);
+      render();
+      showToast('Categoria rinominata.');
+    });
+  });
+
+  document.querySelectorAll('[data-category-goal]').forEach((input) => {
+    input.addEventListener('change', async () => {
+      const categoryName = input.dataset.categoryGoal;
+      state.categories = state.categories.map((category) =>
+        category.name === categoryName
+          ? {
+              ...category,
+              monthlyGoal: Number(input.value) || 0,
+            }
+          : category,
+      );
+      await persistCategories();
+      renderBudget();
+      showToast('Obiettivo categoria aggiornato.');
+    });
+  });
+}
+
+async function handleSavingsTargetChange(event) {
+  state.settings.monthlySavingsTarget = Number(event.target.value) || 0;
+  await saveSettings(state.settings);
+  renderBudget();
+  showToast('Obiettivo di risparmio aggiornato.');
+}
+
+function bindTransactionCategorySelectors() {
+  document.querySelectorAll('[data-transaction-category]').forEach((select) => {
+    select.addEventListener('change', async () => {
+      state.transactions = applyCategoryToTransaction(
+        state.transactions,
+        select.dataset.transactionCategory,
+        select.value,
+      );
+      await saveTransactions(state.transactions);
+      render();
+      showToast('Spesa ricategorizzata.');
+    });
+  });
+}
+
+async function persistCategories() {
+  setCategoryStyles(state.categories);
+  await saveCategories(state.categories);
+}
+
+function uniqueCategoryName(baseName) {
+  const names = new Set(state.categories.map((category) => category.name));
+  if (!names.has(baseName)) return baseName;
+  let counter = 2;
+  while (names.has(`${baseName} ${counter}`)) counter += 1;
+  return `${baseName} ${counter}`;
+}
+
+function slugCategory(name) {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}

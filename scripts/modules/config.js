@@ -1,4 +1,6 @@
 export const STORAGE_KEY = 'moneyCoachWeb.transactions.v1';
+export const SETTINGS_KEY = 'moneyCoachWeb.settings.v1';
+export const CATEGORIES_KEY = 'moneyCoachWeb.categories.v1';
 
 export const categoryOrder = [
   'Casa',
@@ -54,3 +56,25 @@ export const budgets = {
   Altro: 160,
 };
 
+export const defaultSettings = {
+  monthlySavingsTarget: 300,
+};
+
+export const defaultCategories = categoryOrder
+  .filter((name) => !['Entrate', 'Trasferimenti'].includes(name))
+  .map((name) => ({
+    id: slugCategory(name),
+    name,
+    color: categoryColors[name],
+    icon: categoryIcons[name],
+    monthlyGoal: 0,
+  }));
+
+function slugCategory(name) {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}

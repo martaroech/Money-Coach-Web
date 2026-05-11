@@ -83,7 +83,22 @@
             <p id="budgetIntro">Importa un CSV per confrontare le categorie con limiti sani.</p>
           </div>
         </div>
+        <div class="card data-card border-0 mb-3">
+          <div class="card-body">
+            <label class="form-label fw-bold" for="monthlySavingsTarget">Risparmio desiderato al mese</label>
+            <div class="input-group">
+              <span class="input-group-text border-0 bg-white">€</span>
+              <input id="monthlySavingsTarget" class="form-control border-0 shadow-none" type="number" min="0" step="25" inputmode="decimal">
+            </div>
+          </div>
+        </div>
+        <div id="budgetSummary" class="stack mb-3"></div>
         <div id="budgetList" class="stack"></div>
+        <div class="section-heading d-flex align-items-end justify-content-between">
+          <h2>Categorie</h2>
+          <span class="badge rounded-pill text-bg-light">Modificabili</span>
+        </div>
+        <div id="categoryManager" class="stack"></div>
       </section>
 
       <section id="coachPage" class="page" aria-labelledby="coachTitle">

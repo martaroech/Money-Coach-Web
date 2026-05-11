@@ -1,5 +1,8 @@
 import { categoryColors, categoryIcons, categoryOrder } from './config.js';
 
+const customCategoryColors = {};
+const customCategoryIcons = {};
+
 export function hasAny(text, needles) {
   return needles.some((needle) => text.includes(needle));
 }
@@ -20,11 +23,20 @@ export function sortCategories(categories) {
 }
 
 export function colorFor(category) {
-  return categoryColors[category] || categoryColors.Altro;
+  return customCategoryColors[category] || categoryColors[category] || categoryColors.Altro;
 }
 
 export function iconFor(category) {
-  return categoryIcons[category] || categoryIcons.Altro;
+  return customCategoryIcons[category] || categoryIcons[category] || categoryIcons.Altro;
+}
+
+export function setCategoryStyles(categories) {
+  Object.keys(customCategoryColors).forEach((key) => delete customCategoryColors[key]);
+  Object.keys(customCategoryIcons).forEach((key) => delete customCategoryIcons[key]);
+  categories.forEach((category) => {
+    customCategoryColors[category.name] = category.color || categoryColors.Altro;
+    customCategoryIcons[category.name] = category.icon || categoryIcons.Altro;
+  });
 }
 
 export function formatMoney(amount) {
@@ -72,4 +84,3 @@ export function showToast(message) {
     toast.classList.remove('show');
   }, 3200);
 }
-
