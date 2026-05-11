@@ -80,7 +80,7 @@ input {
   color: white;
 
   h2 {
-    margin: 8px 0 10px;
+    margin: 8px 0 6px;
     font-size: 39px;
     font-weight: 900;
     letter-spacing: 0;
@@ -88,6 +88,47 @@ input {
 
   p {
     margin: 0;
+  }
+
+  .hero-period {
+    margin: 0 0 2px;
+    color: fade(white, 88%);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.4;
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 0;
+
+    .hero-label {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .hero-calendar-btn {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid fade(white, 42%);
+    background: fade(white, 16%);
+    color: white;
+
+    &:hover,
+    &:focus-visible {
+      background: fade(white, 28%);
+      color: white;
+    }
   }
 
   .btn {
@@ -137,8 +178,10 @@ input {
   }
 
   span {
-    color: @muted;
-    font-size: 13px;
+    color: @brand;
+    font-size: 18px;
+    font-weight: 700;
+    text-box-trim: trim-end;
   }
 }
 
@@ -573,4 +616,16 @@ input {
 .text-bg-light {
   background: @surface !important;
   color: @muted !important;
+}
+
+body.mc-modal-blur-active .modal-backdrop.show {
+  opacity: 1 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: fade(@ink, 0.36) !important;
+}
+
+.modal-period-money .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
 }

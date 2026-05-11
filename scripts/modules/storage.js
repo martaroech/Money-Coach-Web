@@ -1,5 +1,5 @@
 import { CATEGORIES_KEY, SETTINGS_KEY, STORAGE_KEY, defaultCategories, defaultSettings } from './config.js';
-import { enrichTransaction } from './transactions.js';
+import { coerceStoredDate, enrichTransaction } from './transactions.js';
 
 const DB_NAME = 'moneyCoachWeb';
 const DB_VERSION = 1;
@@ -124,10 +124,11 @@ function normalizeTransactions(transactions) {
     .map((item) =>
       enrichTransaction({
         ...item,
-        startedAt: new Date(item.startedAt),
-        completedAt: new Date(item.completedAt),
+        startedAt: coerceStoredDate(item.startedAt),
+        completedAt: coerceStoredDate(item.completedAt),
       }),
     )
+    .filter((item) => item.completedAt instanceof Date && !Number.isNaN(item.completedAt.getTime()))
     .sort((a, b) => b.completedAt - a.completedAt);
 }
 

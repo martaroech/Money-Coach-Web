@@ -62,13 +62,49 @@ input {
   color: white;
 }
 .hero-panel h2 {
-  margin: 8px 0 10px;
+  margin: 8px 0 6px;
   font-size: 39px;
   font-weight: 900;
   letter-spacing: 0;
 }
 .hero-panel p {
   margin: 0;
+}
+.hero-panel .hero-period {
+  margin: 0 0 2px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.hero-panel .hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 0;
+}
+.hero-panel .hero-top .hero-label {
+  flex: 1;
+  min-width: 0;
+}
+.hero-panel .hero-calendar-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+}
+.hero-panel .hero-calendar-btn:hover,
+.hero-panel .hero-calendar-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.28);
+  color: white;
 }
 .hero-panel .btn {
   margin-top: 16px;
@@ -110,8 +146,10 @@ input {
   font-weight: 850;
 }
 .metric-card span {
-  color: #66736d;
-  font-size: 13px;
+  color: #b80022;
+  font-size: 18px;
+  font-weight: 700;
+  text-box-trim: trim-end;
 }
 .section-heading {
   display: flex;
@@ -488,4 +526,14 @@ input {
 .text-bg-light {
   background: #ffffff !important;
   color: #66736d !important;
+}
+body.mc-modal-blur-active .modal-backdrop.show {
+  opacity: 1 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(23, 35, 30, 0.0036) !important;
+}
+.modal-period-money .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
 }

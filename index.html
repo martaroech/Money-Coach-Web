@@ -29,12 +29,24 @@
 
       <section id="dashboardPage" class="page active" aria-labelledby="dashboardTitle">
         <div class="card hero-panel border-0">
-          <div class="hero-label d-flex align-items-center gap-2">
-            <i class="fa-solid fa-shield-halved"></i>
-            <span>Dati sul dispositivo</span>
+          <div class="hero-top">
+            <div class="hero-label d-flex align-items-center gap-2">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Dati sul dispositivo</span>
+            </div>
+            <button
+              id="openPeriodModalBtn"
+              type="button"
+              class="btn hero-calendar-btn d-none"
+              data-bs-toggle="modal"
+              data-bs-target="#periodFilterModal"
+              aria-label="Filtra il periodo in base alle date del CSV">
+              <i class="fa-solid fa-calendar-days"></i>
+            </button>
           </div>
           <p id="heroKicker" class="mt-2 fw-bold">Importa un file CSV da Revolut</p>
           <h2 id="heroAmount" class="m-0"></h2>
+          <p id="heroPeriodLabel" class="hero-period d-none" role="status" aria-live="polite"></p>
           <p id="heroCopy">Carica l'export CSV di Revolut. Il coach categorizza, salva e analizza tutto nel browser.</p>
           <button id="heroImportButton" class="btn btn-light btn-sm fw-bold" type="button">
             <i class="fa-solid fa-file-arrow-down me-2"></i>Importa CSV
@@ -138,6 +150,44 @@
     </main>
 
     <div id="toast" class="toast-message" role="status" aria-live="polite"></div>
+
+    <div
+      class="modal fade modal-period-money"
+      id="periodFilterModal"
+      tabindex="-1"
+      aria-labelledby="periodFilterModalTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered px-3">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header border-0 pb-0">
+            <h2 class="modal-title h5 fw-bold" id="periodFilterModalTitle">Periodo dalle date CSV</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+          </div>
+          <div class="modal-body pt-2">
+            <p class="text-secondary small mb-3">
+              Le analisi si basano sulla <strong>data di completamento</strong>; il periodo suggerito segue gli estremi presenti nell’export.
+            </p>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label small mb-0 fw-bold" for="periodStartInput">Dal</label>
+                <input id="periodStartInput" class="form-control" type="date" autocomplete="off">
+              </div>
+              <div class="col-6">
+                <label class="form-label small mb-0 fw-bold" for="periodEndInput">Al</label>
+                <input id="periodEndInput" class="form-control" type="date" autocomplete="off">
+              </div>
+            </div>
+            <div class="d-flex mt-3 align-items-center justify-content-between gap-2 flex-wrap">
+              <button id="periodResetButton" type="button" class="btn btn-outline-secondary btn-sm">
+                Tutti i dati
+              </button>
+              <button type="button" class="btn btn-brand btn-sm fw-bold px-4" data-bs-dismiss="modal">Fatto</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="scripts/bootstrap.min.js"></script>
     <script type="module" src="scripts/script.js"></script>

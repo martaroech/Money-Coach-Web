@@ -60,19 +60,6 @@ export function applyCategoryToTransaction(transactions, transactionId, category
   );
 }
 
-export function categorySpendingForCurrentMonth(transactions, categoryName) {
-  const now = new Date();
-  return transactions
-    .filter((item) => item.countsAsSpending)
-    .filter((item) => item.category === categoryName)
-    .filter(
-      (item) =>
-        item.completedAt.getFullYear() === now.getFullYear() &&
-        item.completedAt.getMonth() === now.getMonth(),
-    )
-    .reduce((total, item) => total + item.absoluteAmount, 0);
-}
-
 function getCoveredMonths(transactions) {
   const months = new Set(
     transactions

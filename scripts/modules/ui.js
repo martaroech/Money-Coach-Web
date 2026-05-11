@@ -1,5 +1,11 @@
 import { groupTransactions, summarize } from './analyzer.js';
-import { applyCategoryToTransaction, buildBudgetPlan, categorySpendingForCurrentMonth } from './budgetPlanner.js';
+import { applyCategoryToTransaction, buildBudgetPlan } from './budgetPlanner.js';
+import {
+  describeAnalyticsPeriod,
+  dateToIsoInput,
+  filterTransactionsByPeriod,
+  getTransactionDateBounds,
+} from './periodFilter.js';
 import { parseRevolutCsv } from './csvImporter.js';
 import {
   clearTransactions,
@@ -74,6 +80,19 @@ function bindEvents() {
   });
   document.getElementById('monthlySavingsTarget').addEventListener('change', handleSavingsTargetChange);
   document.getElementById('clearDataButton').addEventListener('click', clearData);
+
+  document.getElementById('periodStartInput').addEventListener('change', handlePeriodInputsChange);
+  document.getElementById('periodEndInput').addEventListener('change', handlePeriodInputsChange);
+  document.getElementById('periodResetButton').addEventListener('click', resetAnalyticsPeriod);
+
+  const periodModalEl = document.getElementById('periodFilterModal');
+  periodModalEl.addEventListener('show.bs.modal', () => {
+    document.body.classList.add('mc-modal-blur-active');
+    syncPeriodInputsFromState();
+  });
+  periodModalEl.addEventListener('hidden.bs.modal', () => {
+    document.body.classList.remove('mc-modal-blur-active');
+  });
 }
 
 function openImporter() {
@@ -90,6 +109,7 @@ async function handleCsvImport(event) {
     const result = parseRevolutCsv(content);
     state.transactions = mergeTransactions(state.transactions, result.transactions);
     await saveTransactions(state.transactions);
+    await applyDefaultPeriodFromCsvBoundsIfUnset();
     showToast(
       `Importate ${result.transactions.length} righe da ${file.name}. Saltate: ${result.skippedRows}.`,
     );
@@ -103,11 +123,82 @@ async function clearData() {
   if (!window.confirm('Cancellare tutte le transazioni salvate in questo browser?')) return;
   await clearTransactions();
   state.transactions = [];
+  state.settings.analyticsPeriodStart = '';
+  state.settings.analyticsPeriodEnd = '';
+  await saveSettings(state.settings);
   state.expenseFilter = 'Tutte';
   state.expenseQuery = '';
   state.expandedCategories.clear();
+  const periodModalEl = document.getElementById('periodFilterModal');
+  window.bootstrap?.Modal?.getInstance(periodModalEl)?.hide();
+  document.body.classList.remove('mc-modal-blur-active');
+  syncPeriodInputsFromState();
   showToast('Dati locali cancellati.');
   render();
+}
+
+function getScopedTransactions() {
+  return filterTransactionsByPeriod(
+    state.transactions,
+    state.settings.analyticsPeriodStart || '',
+    state.settings.analyticsPeriodEnd || '',
+  );
+}
+
+function syncPeriodInputsFromState() {
+  const startEl = document.getElementById('periodStartInput');
+  const endEl = document.getElementById('periodEndInput');
+  startEl.value = state.settings.analyticsPeriodStart || '';
+  endEl.value = state.settings.analyticsPeriodEnd || '';
+}
+
+async function handlePeriodInputsChange() {
+  let start = document.getElementById('periodStartInput').value;
+  let end = document.getElementById('periodEndInput').value;
+  const bounds = getTransactionDateBounds(state.transactions);
+  if (bounds.min && bounds.max) {
+    const minS = dateToIsoInput(bounds.min);
+    const maxS = dateToIsoInput(bounds.max);
+    if (start && start < minS) start = minS;
+    if (start && start > maxS) start = maxS;
+    if (end && end < minS) end = minS;
+    if (end && end > maxS) end = maxS;
+  }
+  if (start && end && start > end) {
+    const tmp = start;
+    start = end;
+    end = tmp;
+  }
+  state.settings.analyticsPeriodStart = start;
+  state.settings.analyticsPeriodEnd = end;
+  syncPeriodInputsFromState();
+  await saveSettings(state.settings);
+  render();
+}
+
+async function resetAnalyticsPeriod() {
+  state.settings.analyticsPeriodStart = '';
+  state.settings.analyticsPeriodEnd = '';
+  syncPeriodInputsFromState();
+  await saveSettings(state.settings);
+  render();
+}
+
+/** Se l’utente non ha mai ristretto il periodo, ancorarlo agli estremi ricavati dal CSV (startedAt/completedAt). */
+async function applyDefaultPeriodFromCsvBoundsIfUnset() {
+  if (state.settings.analyticsPeriodStart || state.settings.analyticsPeriodEnd) return;
+  const bounds = getTransactionDateBounds(state.transactions);
+  if (!bounds.min || !bounds.max) return;
+  state.settings.analyticsPeriodStart = dateToIsoInput(bounds.min);
+  state.settings.analyticsPeriodEnd = dateToIsoInput(bounds.max);
+  syncPeriodInputsFromState();
+  await saveSettings(state.settings);
+}
+
+function categorySpendingInPeriod(transactions, categoryName) {
+  return transactions
+    .filter((item) => item.countsAsSpending && item.category === categoryName)
+    .reduce((acc, item) => acc + item.absoluteAmount, 0);
 }
 
 function render() {
@@ -132,37 +223,63 @@ function renderPages() {
 }
 
 function renderDashboard() {
-  const summary = summarize(state.transactions);
-  const hasData = state.transactions.length > 0;
+  const hasFullData = state.transactions.length > 0;
+  const bounds = getTransactionDateBounds(state.transactions);
+  const periodLine = describeAnalyticsPeriod(
+    state.settings.analyticsPeriodStart || '',
+    state.settings.analyticsPeriodEnd || '',
+    bounds,
+  );
+  const scoped = getScopedTransactions();
+  const summary = summarize(scoped, { totalImportedCount: state.transactions.length });
 
-  setText('heroKicker', hasData ? 'Totale conti' : '');
-  setText('heroAmount', hasData ? formatMoney(summary.spending) : 'Importa CSV');
+  const heroPeriodEl = document.getElementById('heroPeriodLabel');
+  const heroCopyEl = document.getElementById('heroCopy');
+  document.getElementById('openPeriodModalBtn').classList.toggle('d-none', !hasFullData);
+
+  heroPeriodEl.classList.toggle('d-none', !hasFullData);
+  heroPeriodEl.textContent =
+    hasFullData && periodLine ? `Periodo di calcolo: ${periodLine}` : '';
+  if (hasFullData && bounds.min && bounds.max) {
+    const isoMin = dateToIsoInput(bounds.min);
+    const isoMax = dateToIsoInput(bounds.max);
+    const startEl = document.getElementById('periodStartInput');
+    const endEl = document.getElementById('periodEndInput');
+    startEl.min = isoMin;
+    startEl.max = isoMax;
+    endEl.min = isoMin;
+    endEl.max = isoMax;
+  }
+  syncPeriodInputsFromState();
+
+  setText('heroKicker', hasFullData ? 'Netto conto' : '');
+  setText('heroAmount', hasFullData ? formatMoney(summary.net) : 'Importa CSV');
   setText(
     'heroCopy',
-    hasData ? '' : 'Carica l’export in .csv di Revolut. Il coach categorizza, salva e analizza tutto nel browser.',
+    hasFullData ? '' : 'Carica l’export in .csv di Revolut. Il coach categorizza, salva e analizza tutto nel browser.',
   );
-  document.getElementById('heroImportButton').classList.toggle('d-none', hasData);
+  heroCopyEl.classList.toggle('d-none', hasFullData);
+  document.getElementById('heroImportButton').classList.toggle('d-none', hasFullData);
 
   document.getElementById('metricGrid').innerHTML = [
-    metricCard('Uscite', formatMoney(summary.spending), 'fa-arrow-up-right-from-square', '##b80022'),
     metricCard('Entrate', formatMoney(summary.income), 'fa-plus-square', '#b80022'),
-    metricCard(
-      'Saldo netto',
-      formatMoney(summary.net),
-      'fa-equals',
-      summary.net >= 0 ? '#b80022' : '#b80022',
-    ),
-    metricCard('Categorie', String(Object.keys(summary.categoryTotals).length), 'fa-tags', '#b80022'),
+    metricCard('Uscite', formatMoney(summary.spending), 'fa-arrow-up-right-from-square', '#b80022'),
   ].join('');
 
-  setText('categoryCount', hasData ? 'Auto' : 'In attesa');
-  document.getElementById('categoryBreakdown').innerHTML = hasData
-    ? renderCategoryBreakdown(summary.categoryTotals)
-    : emptyState(
+  setText('categoryCount', hasFullData ? 'Auto' : 'In attesa');
+  document.getElementById('categoryBreakdown').innerHTML = !hasFullData
+    ? emptyState(
         'fa-file-csv',
         'Nessun CSV importato',
         'Scegli l’export Revolut in formato CSV. Lo leggerò e lo salverò localmente.',
-      );
+      )
+    : Object.keys(summary.categoryTotals).length
+      ? renderCategoryBreakdown(summary.categoryTotals)
+      : emptyState(
+          'fa-calendar-xmark',
+          'Niente in questo periodo',
+          'Apri il modale calendario in alto sulla Home per allargare «Dal»/«Al» o clicca Tutti i dati.',
+        );
 
   setText('coachCount', `${summary.coachNotes.length} note`);
   document.getElementById('coachPreview').innerHTML = summary.coachNotes.slice(0, 2).map(coachCard).join('');
@@ -173,7 +290,8 @@ function renderExpenses() {
     button.classList.toggle('active', button.dataset.view === state.expenseView);
   });
 
-  const base = state.transactions.filter(
+  const scoped = getScopedTransactions();
+  const base = scoped.filter(
     (item) => item.countsAsSpending || (item.isIncome && !item.isInternalTransfer),
   );
   const categories = ['Tutte', ...sortCategories([...new Set(base.map((item) => item.category))])];
@@ -197,12 +315,22 @@ function renderExpenses() {
     .sort((a, b) => b.completedAt - a.completedAt);
 
   const container = document.getElementById('expensesList');
+  const scopedSpend = getScopedTransactions().filter(
+    (item) => item.countsAsSpending || (item.isIncome && !item.isInternalTransfer),
+  );
   if (filtered.length === 0) {
-    container.innerHTML = emptyState(
-      'fa-magnifying-glass-chart',
-      'Nessuna spesa trovata',
-      'Prova un’altra ricerca o cambia filtro.',
-    );
+    container.innerHTML =
+      scopedSpend.length === 0
+        ? emptyState(
+            'fa-calendar-xmark',
+            'Nessun movimento nel periodo',
+            'Apri il modale dalla Home (icona calendario) o clicca Tutti i dati.',
+          )
+        : emptyState(
+            'fa-magnifying-glass-chart',
+            'Nessuna spesa trovata',
+            'Prova un’altra ricerca o cambia filtro.',
+          );
     return;
   }
 
@@ -229,11 +357,12 @@ function renderExpenses() {
 }
 
 function renderBudget() {
-  const summary = summarize(state.transactions);
-  const plan = buildBudgetPlan(state.transactions, state.categories, state.settings);
+  const scoped = getScopedTransactions();
+  const summary = summarize(scoped, { totalImportedCount: state.transactions.length });
+  const plan = buildBudgetPlan(scoped, state.categories, state.settings);
   setText(
     'budgetIntro',
-    `Spesa analizzata: ${formatMoney(summary.spending)} su ${plan.monthCount} mesi. Il coach propone limiti coerenti con il tuo obiettivo.`,
+    `Spesa nel periodo filtrato: ${formatMoney(summary.spending)} distribuita su ${plan.monthCount} mesi. Budget e medi si basano su questa finestra.`,
   );
   document.getElementById('monthlySavingsTarget').value = state.settings.monthlySavingsTarget || 0;
   document.getElementById('budgetSummary').innerHTML = budgetSummaryCard(plan);
@@ -241,7 +370,7 @@ function renderBudget() {
     .map((row) =>
       budgetRow(
         row.name,
-        categorySpendingForCurrentMonth(state.transactions, row.name),
+        categorySpendingInPeriod(scoped, row.name),
         row.budget,
         row.average,
         row.suggested,
@@ -253,12 +382,19 @@ function renderBudget() {
 }
 
 function renderCoach() {
-  const summary = summarize(state.transactions);
+  const scoped = getScopedTransactions();
+  const summary = summarize(scoped, { totalImportedCount: state.transactions.length });
   document.getElementById('coachList').innerHTML = summary.coachNotes.map(coachCard).join('');
   setText('merchantCount', String(summary.topMerchants.length));
   document.getElementById('merchantList').innerHTML = summary.topMerchants.length
     ? summary.topMerchants.slice(0, 8).map(merchantCard).join('')
-    : emptyState('fa-shop', 'Nessun esercente', 'Importa un CSV per vedere gli esercenti più presenti.');
+    : emptyState(
+        'fa-shop',
+        'Nessun esercente',
+        state.transactions.length === 0
+          ? 'Importa un CSV per vedere gli esercenti più presenti.'
+          : 'Prova un altro periodo o allarga «Dal»/«Al» dal modale sulla Home.',
+      );
 }
 
 function matchesExpenseSearch(item, query) {

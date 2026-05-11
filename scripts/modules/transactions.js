@@ -67,8 +67,17 @@ export function inferCategory(description, type, amount) {
 }
 
 export function parseDate(value) {
-  if (!value) return new Date(0);
-  return new Date(value.replace(' ', 'T'));
+  if (value == null || String(value).trim() === '') return null;
+  const normalized = String(value).trim().replace(' ', 'T');
+  const d = new Date(normalized);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Ricostruisce Date da IndexedDB/localStorage senza trasformare null in epoch. */
+export function coerceStoredDate(value) {
+  if (value == null || value === '') return null;
+  const d = value instanceof Date ? new Date(value.getTime()) : new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 export function parseNumber(value) {

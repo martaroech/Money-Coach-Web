@@ -58,6 +58,9 @@ export const budgets = {
 
 export const defaultSettings = {
   monthlySavingsTarget: 300,
+  /** yyyy-MM-DD o '' = nessun limite su quel estremo */
+  analyticsPeriodStart: '',
+  analyticsPeriodEnd: '',
 };
 
 export const defaultCategories = categoryOrder

@@ -1,6 +1,6 @@
 import { formatMoney, sum } from './utils.js';
 
-export function summarize(transactions) {
+export function summarize(transactions, summarizeOpts = {}) {
   const completed = transactions.filter((item) => item.isCompleted);
   const spendingRows = completed.filter((item) => item.countsAsSpending);
   const incomeRows = completed.filter((item) => item.isIncome && !item.isInternalTransfer);
@@ -37,7 +37,13 @@ export function summarize(transactions) {
     categoryTotals,
     topMerchants,
     recurringCandidates: recurring,
-    coachNotes: buildCoachNotes(categoryTotals, recurring, spendingRows.length),
+    coachNotes: buildCoachNotes(
+      categoryTotals,
+      recurring,
+      spendingRows.length,
+      summarizeOpts.totalImportedCount ?? transactions.length,
+      transactions,
+    ),
   };
 }
 
@@ -63,13 +69,36 @@ export function groupTransactions(transactions) {
     });
 }
 
-function buildCoachNotes(categoryTotals, recurring, spendingCount) {
+function buildCoachNotes(categoryTotals, recurring, spendingCount, totalImportedCount, scopedTransactions) {
   const entries = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+  const completedInScope = scopedTransactions.filter((item) => item.isCompleted).length;
+
   if (!entries.length) {
+    if (totalImportedCount === 0) {
+      return [
+        {
+          title: 'Importa il primo CSV',
+          body: 'Quando carichi un export Revolut, il coach crea categorie, budget e insight locali.',
+          kind: 'info',
+        },
+      ];
+    }
+
+    if (completedInScope === 0) {
+      return [
+        {
+          title: 'Niente nel periodo',
+          body:
+            'Nessuna transazione completata in questo intervallo. Prova a cambiare le date sopra.',
+          kind: 'info',
+        },
+      ];
+    }
+
     return [
       {
-        title: 'Importa il primo CSV',
-        body: 'Quando carichi un export Revolut, il coach crea categorie, budget e insight locali.',
+        title: 'Senza spese rilevanti',
+        body: `${completedInScope} movimenti completati nel periodo, ma uscite riclassificabili mancano: potrebbe essere solo entrate o trasferimenti interni.`,
         kind: 'info',
       },
     ];

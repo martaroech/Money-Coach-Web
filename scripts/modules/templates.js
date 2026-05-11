@@ -1,6 +1,9 @@
 import { alpha, colorFor, dateLabel, escapeHtml, formatMoney, iconFor } from './utils.js';
 
-export function metricCard(label, value, icon, color) {
+export function metricCard(label, value, icon, color, subtitle = '') {
+  const sub = subtitle
+    ? `<small class="d-block text-secondary mt-1">${escapeHtml(subtitle)}</small>`
+    : '';
   return `<div class="col-6">
     <article class="card metric-card border-0 h-100">
       <div class="card-body">
@@ -9,6 +12,7 @@ export function metricCard(label, value, icon, color) {
           <span>${escapeHtml(label)}</span>
         </div>
         <strong>${escapeHtml(value)}</strong>
+        ${sub}
       </div>
     </article>
   </div>`;

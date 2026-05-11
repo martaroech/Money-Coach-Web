@@ -22,6 +22,10 @@ export function parseRevolutCsv(content) {
       const product = values.prodotto || '';
       const startedAt = parseDate(values['data di inizio']);
       const completedAt = parseDate(values['data di completamento']);
+      if (!completedAt) {
+        skippedRows += 1;
+        continue;
+      }
       const description = values.descrizione || '';
       const amount = parseNumber(values.importo);
       const fee = parseNumber(values.costo);
