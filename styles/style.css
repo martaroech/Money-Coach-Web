@@ -6,7 +6,7 @@ body {
   min-height: 100vh;
   background: #f4f0e7;
   color: #17231e;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "DM Sans", "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 button,
 input {
@@ -313,6 +313,10 @@ input {
   white-space: nowrap;
   font-weight: 650;
 }
+.compact-main {
+  display: grid;
+  gap: 4px;
+}
 .transaction-card,
 .merchant-card {
   padding: 14px;
@@ -322,6 +326,19 @@ input {
 }
 .budget-row small {
   color: #66736d;
+}
+.category-select {
+  max-width: 180px;
+}
+.category-editor-list {
+  display: grid;
+  gap: 10px;
+}
+.category-editor-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 92px;
+  gap: 8px;
+  align-items: center;
 }
 .coach-card {
   align-items: flex-start;

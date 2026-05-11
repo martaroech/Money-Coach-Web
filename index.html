@@ -17,19 +17,15 @@
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="stylesheet" href="styles/bootstrap.min.css">
     <link rel="stylesheet" href="styles/fontawesome.min.css">
+    <link rel="stylesheet" href="styles/fonts.css">
     <link rel="stylesheet" href="styles/style-min.css">
   </head>
   <body>
     <main class="app-shell container px-3">
-      <header class="app-header d-flex align-items-center justify-content-between gap-3">
-        <div>
-          <h1>Money Coach</h1>
-        </div>
-        <button id="importButton" class="btn btn-brand-soft rounded-circle icon-btn" type="button" aria-label="Importa CSV Revolut">
-          <i class="fa-solid fa-file-arrow-up"></i>
-        </button>
-        <input id="csvInput" class="d-none" type="file" accept=".csv,text/csv">
+      <header class="app-header d-flex align-items-center justify-content-center">
+        <h1>Money Coach</h1>
       </header>
+      <input id="csvInput" class="d-none" type="file" accept=".csv,text/csv">
 
       <section id="dashboardPage" class="page active" aria-labelledby="dashboardTitle">
         <div class="card hero-panel border-0">
@@ -37,8 +33,8 @@
             <i class="fa-solid fa-shield-halved"></i>
             <span>Dati sul dispositivo</span>
           </div>
-          <p id="heroKicker">Importa un file CSV da Revolut</p>
-          <h2 id="heroAmount"></h2>
+          <p id="heroKicker" class="mt-2 fw-bold">Importa un file CSV da Revolut</p>
+          <h2 id="heroAmount" class="m-0"></h2>
           <p id="heroCopy">Carica l'export CSV di Revolut. Il coach categorizza, salva e analizza tutto nel browser.</p>
           <button id="heroImportButton" class="btn btn-light btn-sm fw-bold" type="button">
             <i class="fa-solid fa-file-arrow-down me-2"></i>Importa CSV
@@ -87,7 +83,7 @@
           <div class="card-body">
             <label class="form-label fw-bold" for="monthlySavingsTarget">Risparmio desiderato al mese</label>
             <div class="input-group">
-              <span class="input-group-text border-0 bg-white">€</span>
+              <span class="input-group-text border-0 bg-white">€ </span>
               <input id="monthlySavingsTarget" class="form-control border-0 shadow-none" type="number" min="0" step="25" inputmode="decimal">
             </div>
           </div>
@@ -110,7 +106,7 @@
         </div>
         <div id="merchantList" class="stack"></div>
 
-        <div class="card privacy-panel border-0">
+        <div class="card privacy-panel border-0 mt-4">
           <div>
             <h2><i class="fa-solid fa-lock me-2"></i>Privacy by design</h2>
             <p>CSV, categorie e analisi restano nel browser. Nessun server e nessuna API obbligatoria.</p>

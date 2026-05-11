@@ -44,7 +44,7 @@ export function formatMoney(amount) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  return `€${formatted.endsWith(',00') ? formatted.slice(0, -3) : formatted}`;
+  return `€ ${formatted.endsWith(',00') ? formatted.slice(0, -3) : formatted}`;
 }
 
 export function dateLabel(date) {
@@ -64,6 +64,11 @@ export function alpha(hex, opacity) {
 
 export function setText(id, value) {
   document.getElementById(id).textContent = value;
+}
+
+/** Inserisce HTML (non usare con input utente non sanificati). */
+export function setHtml(id, html) {
+  document.getElementById(id).innerHTML = html;
 }
 
 export function escapeHtml(value) {

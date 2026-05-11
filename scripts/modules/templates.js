@@ -4,11 +4,11 @@ export function metricCard(label, value, icon, color) {
   return `<div class="col-6">
     <article class="card metric-card border-0 h-100">
       <div class="card-body">
-        <i class="fa-solid ${icon}" style="color:${color}"></i>
-        <div>
-          <strong>${escapeHtml(value)}</strong>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <i class="fa-solid ${icon}" style="color:${color}"></i>
           <span>${escapeHtml(label)}</span>
         </div>
+        <strong>${escapeHtml(value)}</strong>
       </div>
     </article>
   </div>`;

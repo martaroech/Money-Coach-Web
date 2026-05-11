@@ -66,7 +66,6 @@ function bindEvents() {
     });
   });
 
-  document.getElementById('importButton').addEventListener('click', openImporter);
   document.getElementById('heroImportButton').addEventListener('click', openImporter);
   document.getElementById('csvInput').addEventListener('change', handleCsvImport);
   document.getElementById('expenseSearch').addEventListener('input', (event) => {
@@ -136,26 +135,24 @@ function renderDashboard() {
   const summary = summarize(state.transactions);
   const hasData = state.transactions.length > 0;
 
-  setText('heroKicker', hasData ? 'Uscite importate' : 'Importa Revolut');
-  setText('heroAmount', hasData ? formatMoney(summary.spending) : 'CSV aprile');
+  setText('heroKicker', hasData ? 'Totale conti' : '');
+  setText('heroAmount', hasData ? formatMoney(summary.spending) : 'Importa CSV');
   setText(
     'heroCopy',
-    hasData
-      ? `Entrate: ${formatMoney(summary.income)}. Netto: ${formatMoney(summary.net)}. Trasferimenti interni esclusi dalle spese.`
-      : 'Carica l’export CSV di Revolut. Il coach categorizza, salva e analizza tutto nel browser.',
+    hasData ? '' : 'Carica l’export in .csv di Revolut. Il coach categorizza, salva e analizza tutto nel browser.',
   );
   document.getElementById('heroImportButton').classList.toggle('d-none', hasData);
 
   document.getElementById('metricGrid').innerHTML = [
-    metricCard('Uscite', formatMoney(summary.spending), 'fa-arrow-up-right-from-square', '#e36f54'),
+    metricCard('Uscite', formatMoney(summary.spending), 'fa-arrow-up-right-from-square', '##b80022'),
     metricCard('Entrate', formatMoney(summary.income), 'fa-plus-square', '#b80022'),
     metricCard(
       'Saldo netto',
       formatMoney(summary.net),
       'fa-equals',
-      summary.net >= 0 ? '#b80022' : '#e36f54',
+      summary.net >= 0 ? '#b80022' : '#b80022',
     ),
-    metricCard('Categorie', String(Object.keys(summary.categoryTotals).length), 'fa-tags', '#0e7c7b'),
+    metricCard('Categorie', String(Object.keys(summary.categoryTotals).length), 'fa-tags', '#b80022'),
   ].join('');
 
   setText('categoryCount', hasData ? 'Auto' : 'In attesa');
