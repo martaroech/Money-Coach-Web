@@ -1,5 +1,42 @@
 import { formatMoney, sum } from './utils.js';
 
+export function estimatedLatestSaldoEur(transactions) {
+  if (!Array.isArray(transactions) || !transactions.length) return null;
+
+  /** @type {Date | null} */
+  let maxDate = null;
+  let maxTs = Number.NEGATIVE_INFINITY;
+
+  for (const item of transactions) {
+    if (!item.isCompleted) continue;
+    if (String(item.currency || 'EUR').toUpperCase() !== 'EUR') continue;
+    if (!Number.isFinite(item.balance)) continue;
+    const ct = item.completedAt instanceof Date ? item.completedAt : null;
+    if (!ct || Number.isNaN(ct.getTime())) continue;
+    const t = ct.getTime();
+    if (t >= maxTs) {
+      maxTs = t;
+      maxDate = ct;
+    }
+  }
+
+  if (maxDate == null) return null;
+
+  let bestBalance = Number.NEGATIVE_INFINITY;
+  for (const item of transactions) {
+    if (!item.isCompleted) continue;
+    if (String(item.currency || 'EUR').toUpperCase() !== 'EUR') continue;
+    if (!Number.isFinite(item.balance)) continue;
+    const ct = item.completedAt instanceof Date ? item.completedAt : null;
+    if (!ct || ct.getTime() !== maxTs) continue;
+    if (item.balance > bestBalance) {
+      bestBalance = item.balance;
+    }
+  }
+
+  return Number.isFinite(bestBalance) ? bestBalance : null;
+}
+
 export function summarize(transactions, summarizeOpts = {}) {
   const completed = transactions.filter((item) => item.isCompleted);
   const spendingRows = completed.filter((item) => item.countsAsSpending);

@@ -1,11 +1,38 @@
 import { hasAny } from './utils.js';
 
+/** Stati Revolut da escludere (annullati, rifiutati, in sospeso, ecc.). */
+export function isRevolutExcludedState(state) {
+  const s = String(state || '')
+    .trim()
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  if (!s) return true;
+  if (s.includes('ANNUL')) return true;
+  if (s.includes('ANNULL')) return true;
+  if (s.includes('RIFIUT')) return true;
+  if (s.includes('CANCEL')) return true;
+  if (s.includes('DECLINED') || s.includes('DECLINE')) return true;
+  if (s.includes('FAILED') || s.includes('FAIL')) return true;
+  if (s.includes('REVERSED')) return true;
+  if (s.includes('SOSPES') || s.includes('PENDING')) return true;
+  return false;
+}
+
+/** Solo completati/pagati, senza substring ambigue su «COMPLETATO». */
+export function isRevolutCompletedState(state) {
+  if (isRevolutExcludedState(state)) return false;
+  const s = String(state || '').trim().toUpperCase();
+  return s === 'COMPLETATO' || s === 'COMPLETED';
+}
+
 export function enrichTransaction(item) {
   const normalized = item.description.toLowerCase();
-  const isCompleted = item.state.toUpperCase().includes('COMPLETATO');
+  const isCompleted = isRevolutCompletedState(item.state);
   const isIncome = item.amount > 0;
   const isInternalTransfer =
     normalized.includes('conto potenziato') ||
+    normalized.includes('conto deposito') ||
     normalized.includes('trasferimento') ||
     normalized.startsWith('da eur') ||
     normalized.startsWith('a eur');
@@ -25,7 +52,7 @@ export function inferCategory(description, type, amount) {
   const text = `${description} ${type}`.toLowerCase();
   if (amount > 0) return 'Entrate';
   if (
-    hasAny(text, ['conto potenziato', 'trasferimento']) ||
+    hasAny(text, ['conto potenziato', 'conto deposito', 'trasferimento']) ||
     text.startsWith('a eur') ||
     text.startsWith('da eur')
   ) {

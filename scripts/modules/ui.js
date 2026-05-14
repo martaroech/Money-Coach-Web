@@ -1,4 +1,4 @@
-import { groupTransactions, summarize } from './analyzer.js';
+import { estimatedLatestSaldoEur, groupTransactions, summarize } from './analyzer.js';
 import { applyCategoryToTransaction, buildBudgetPlan } from './budgetPlanner.js';
 import {
   describeAnalyticsPeriod,
@@ -105,13 +105,22 @@ async function handleCsvImport(event) {
   if (!file) return;
 
   try {
+    const prevBounds = getTransactionDateBounds(state.transactions);
+
     const content = await file.text();
     const result = parseRevolutCsv(content);
     state.transactions = mergeTransactions(state.transactions, result.transactions);
     await saveTransactions(state.transactions);
+
+    const periodExpanded = expandAnalyticsPeriodAfterMerge(prevBounds);
+    if (periodExpanded) {
+      await saveSettings(state.settings);
+    }
     await applyDefaultPeriodFromCsvBoundsIfUnset();
+
+    const afterCount = state.transactions.length;
     showToast(
-      `Importate ${result.transactions.length} righe da ${file.name}. Saltate: ${result.skippedRows}.`,
+      `CSV «${file.name}»: ${result.transactions.length} righe unite all’archivio (${afterCount} movimenti). Saltate in lettura: ${result.skippedRows}.${periodExpanded ? ' Intervallo «Al» aggiornato alla nuova ultima data.' : ''}`,
     );
     render();
   } catch (error) {
@@ -143,6 +152,27 @@ function getScopedTransactions() {
     state.settings.analyticsPeriodStart || '',
     state.settings.analyticsPeriodEnd || '',
   );
+}
+
+/**
+ * Dopo aver unito nuove righe, se il limite «Al» era agganciato alla vecchia ultima data
+ * di completamento, lo sposta alla nuova data massima così il nuovo mese resta nell’analisi.
+ */
+function expandAnalyticsPeriodAfterMerge(prevBounds) {
+  const nextBounds = getTransactionDateBounds(state.transactions);
+  if (!prevBounds?.max || !nextBounds?.max) return false;
+  if (nextBounds.max.getTime() <= prevBounds.max.getTime()) return false;
+
+  const prevIso = dateToIsoInput(prevBounds.max);
+  const nextIso = dateToIsoInput(nextBounds.max);
+  const hasFilter = Boolean(state.settings.analyticsPeriodStart || state.settings.analyticsPeriodEnd);
+  if (!hasFilter) return false;
+
+  if (state.settings.analyticsPeriodEnd === prevIso) {
+    state.settings.analyticsPeriodEnd = nextIso;
+    return true;
+  }
+  return false;
 }
 
 function syncPeriodInputsFromState() {
@@ -232,6 +262,8 @@ function renderDashboard() {
   );
   const scoped = getScopedTransactions();
   const summary = summarize(scoped, { totalImportedCount: state.transactions.length });
+  const saldoEur = estimatedLatestSaldoEur(state.transactions);
+  const heroBalance = saldoEur != null ? saldoEur : summary.net;
 
   const heroPeriodEl = document.getElementById('heroPeriodLabel');
   const heroCopyEl = document.getElementById('heroCopy');
@@ -252,14 +284,23 @@ function renderDashboard() {
   }
   syncPeriodInputsFromState();
 
-  setText('heroKicker', hasFullData ? 'Netto conto' : '');
-  setText('heroAmount', hasFullData ? formatMoney(summary.net) : 'Importa CSV');
+  setText('heroKicker', hasFullData ? 'Saldo (ultimo movimento)' : '');
+  setText('heroAmount', hasFullData ? formatMoney(heroBalance) : 'Importa CSV');
   setText(
     'heroCopy',
     hasFullData ? '' : 'Carica l’export in .csv di Revolut. Il coach categorizza, salva e analizza tutto nel browser.',
   );
   heroCopyEl.classList.toggle('d-none', hasFullData);
-  document.getElementById('heroImportButton').classList.toggle('d-none', hasFullData);
+  const heroImportBtn = document.getElementById('heroImportButton');
+  heroImportBtn.classList.remove('d-none');
+  if (hasFullData) {
+    heroImportBtn.innerHTML =
+      '<i class="fa-solid fa-file-circle-plus me-2"></i>Aggiungi mese (CSV)';
+    heroImportBtn.className = 'btn btn-outline-light btn-sm fw-bold mt-2';
+  } else {
+    heroImportBtn.innerHTML = '<i class="fa-solid fa-file-arrow-down me-2"></i>Importa CSV';
+    heroImportBtn.className = 'btn btn-light btn-sm fw-bold';
+  }
 
   document.getElementById('metricGrid').innerHTML = [
     metricCard('Entrate', formatMoney(summary.income), 'fa-plus-square', '#b80022'),

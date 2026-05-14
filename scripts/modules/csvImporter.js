@@ -31,7 +31,9 @@ export function parseRevolutCsv(content) {
       const fee = parseNumber(values.costo);
       const currency = values.valuta || 'EUR';
       const rowState = values.state || values.stato || '';
-      const balance = parseNumber(values.saldo);
+      const rawSaldo = values.saldo;
+      const hasSaldoCell = rawSaldo != null && String(rawSaldo).trim() !== '';
+      const balance = hasSaldoCell ? parseNumber(rawSaldo) : Number.NaN;
 
       transactions.push(
         enrichTransaction({
@@ -39,7 +41,7 @@ export function parseRevolutCsv(content) {
             completedAt.toISOString(),
             description,
             amount.toFixed(2),
-            balance.toFixed(2),
+            Number.isFinite(balance) ? balance.toFixed(2) : 'nosaldo',
           ].join('|'),
           type,
           product,
