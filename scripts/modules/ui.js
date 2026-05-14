@@ -79,7 +79,18 @@ function bindEvents() {
     renderExpenses();
   });
   document.getElementById('monthlySavingsTarget').addEventListener('change', handleSavingsTargetChange);
-  document.getElementById('clearDataButton').addEventListener('click', clearData);
+  document.getElementById('clearDataButton').addEventListener('click', openClearDataModal);
+  document.getElementById('confirmClearDataButton').addEventListener('click', executeClearLocalData);
+
+  const clearDataModalEl = document.getElementById('clearDataModal');
+  clearDataModalEl.addEventListener('show.bs.modal', () => {
+    document.body.classList.add('mc-modal-blur-active');
+  });
+  clearDataModalEl.addEventListener('hidden.bs.modal', () => {
+    if (!document.getElementById('periodFilterModal')?.classList.contains('show')) {
+      document.body.classList.remove('mc-modal-blur-active');
+    }
+  });
 
   document.getElementById('periodStartInput').addEventListener('change', handlePeriodInputsChange);
   document.getElementById('periodEndInput').addEventListener('change', handlePeriodInputsChange);
@@ -91,7 +102,9 @@ function bindEvents() {
     syncPeriodInputsFromState();
   });
   periodModalEl.addEventListener('hidden.bs.modal', () => {
-    document.body.classList.remove('mc-modal-blur-active');
+    if (!document.getElementById('clearDataModal')?.classList.contains('show')) {
+      document.body.classList.remove('mc-modal-blur-active');
+    }
   });
 }
 
@@ -128,22 +141,33 @@ async function handleCsvImport(event) {
   }
 }
 
-async function clearData() {
-  if (!window.confirm('Cancellare tutte le transazioni salvate in questo browser?')) return;
-  await clearTransactions();
-  state.transactions = [];
-  state.settings.analyticsPeriodStart = '';
-  state.settings.analyticsPeriodEnd = '';
-  await saveSettings(state.settings);
-  state.expenseFilter = 'Tutte';
-  state.expenseQuery = '';
-  state.expandedCategories.clear();
-  const periodModalEl = document.getElementById('periodFilterModal');
-  window.bootstrap?.Modal?.getInstance(periodModalEl)?.hide();
-  document.body.classList.remove('mc-modal-blur-active');
-  syncPeriodInputsFromState();
-  showToast('Dati locali cancellati.');
-  render();
+function openClearDataModal() {
+  window.bootstrap?.Modal?.getOrCreateInstance(document.getElementById('clearDataModal'))?.show();
+}
+
+async function executeClearLocalData() {
+  const confirmBtn = document.getElementById('confirmClearDataButton');
+  const clearModalEl = document.getElementById('clearDataModal');
+  const modalInst = window.bootstrap?.Modal?.getInstance(clearModalEl);
+
+  confirmBtn.disabled = true;
+  try {
+    modalInst?.hide();
+    await clearTransactions();
+    state.transactions = [];
+    state.settings.analyticsPeriodStart = '';
+    state.settings.analyticsPeriodEnd = '';
+    await saveSettings(state.settings);
+    state.expenseFilter = 'Tutte';
+    state.expenseQuery = '';
+    state.expandedCategories.clear();
+    window.bootstrap?.Modal?.getInstance(document.getElementById('periodFilterModal'))?.hide();
+    syncPeriodInputsFromState();
+    showToast('Dati locali cancellati.');
+    render();
+  } finally {
+    confirmBtn.disabled = false;
+  }
 }
 
 function getScopedTransactions() {
@@ -516,15 +540,20 @@ async function handleSavingsTargetChange(event) {
 
 function bindTransactionCategorySelectors() {
   document.querySelectorAll('[data-transaction-category]').forEach((select) => {
-    select.addEventListener('change', async () => {
-      state.transactions = applyCategoryToTransaction(
+      select.addEventListener('change', async () => {
+      const result = applyCategoryToTransaction(
         state.transactions,
         select.dataset.transactionCategory,
         select.value,
       );
+      state.transactions = result.transactions;
       await saveTransactions(state.transactions);
       render();
-      showToast('Spesa ricategorizzata.');
+      showToast(
+        result.affectedCount > 1
+          ? `Ricategoria applicata a ${result.affectedCount} movimenti con la stessa voce.`
+          : 'Spesa ricategorizzata.',
+      );
     });
   });
 }

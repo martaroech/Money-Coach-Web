@@ -190,6 +190,54 @@
       </div>
     </div>
 
+    <div
+      class="modal fade modal-clear-money"
+      id="clearDataModal"
+      tabindex="-1"
+      aria-labelledby="clearDataModalTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered px-3">
+        <div class="modal-content border-0 shadow mc-clear-modal">
+          <div class="modal-header border-0 flex-column align-items-start gap-3 pb-0">
+            <div class="mc-clear-modal__masthead w-100 d-flex gap-3 align-items-start">
+              <div class="mc-clear-modal__icon-wrap flex-shrink-0" aria-hidden="true">
+                <i class="fa-solid fa-database"></i>
+              </div>
+              <button
+                type="button"
+                class="btn-close ms-auto"
+                data-bs-dismiss="modal"
+                aria-label="Chiudi"></button>
+            </div>
+            <div class="w-100 pt-1">
+              <p class="mc-clear-modal__eyebrow text-uppercase mb-2">Azione irreversibile</p>
+              <h2 class="modal-title h5 fw-bold mb-0" id="clearDataModalTitle">Cancellare tutti i dati locali?</h2>
+            </div>
+          </div>
+          <div class="modal-body pt-3 pb-4">
+            <p class="text-secondary mb-4">
+              I file CSV non sono archiviati: restano solo nel browser ciò che è stato estratto e analizzato. Se
+              procedi dovrai ricaricare gli export dalla scheda Coach.
+            </p>
+            <ul class="mc-clear-modal__list mb-0">
+              <li><span>Transazioni e saldi salvati sul dispositivo</span></li>
+              <li><span>Periodo e filtri delle analisi</span></li>
+              <li><span>Categorie riclassificate manualmente</span></li>
+            </ul>
+          </div>
+          <div class="modal-footer border-0 flex-column flex-sm-row gap-2 pt-0 mc-clear-modal__footer">
+            <button type="button" class="btn btn-outline-secondary btn-sm fw-bold px-4 w-100" data-bs-dismiss="modal">
+              Annulla
+            </button>
+            <button type="button" class="btn btn-sm fw-bold px-4 w-100 mc-clear-modal__confirm" id="confirmClearDataButton">
+              <i class="fa-solid fa-trash-can me-2"></i>Sì, cancella tutto
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="scripts/bootstrap.min.js"></script>
     <script type="module" src="scripts/script.js"></script>
   </body>

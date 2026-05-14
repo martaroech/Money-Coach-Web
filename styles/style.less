@@ -629,3 +629,91 @@ body.mc-modal-blur-active .modal-backdrop.show {
   border-radius: 12px;
   overflow: hidden;
 }
+
+// Conferma «Cancella dati locali»: pannello distintivo dall’uso del periodo solo via LESS (style-min compilato dalla root).
+.mc-clear-modal {
+  border-radius: 14px;
+  overflow: hidden;
+  background: @surface;
+  border: 1px solid darken(@brand-soft, 6%);
+}
+
+.modal-clear-money .modal-dialog {
+  max-width: min(392px, 100%);
+}
+
+.mc-clear-modal__masthead {
+  padding-top: 2px;
+}
+
+.mc-clear-modal__icon-wrap {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, fade(@brand, 90%) 0%, darken(@brand, 14%) 100%);
+  color: white;
+  font-size: 22px;
+  box-shadow: 0 10px 24px fade(@brand, 0.28);
+
+  .fa-database {
+    opacity: 0.95;
+  }
+}
+
+.mc-clear-modal__eyebrow {
+  margin: 0;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 850;
+  color: @brand;
+}
+
+.mc-clear-modal__list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: darken(@paper, 1.5%);
+    border: 1px solid fade(@muted, 0.18);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.4;
+    color: @ink;
+
+    &::before {
+      content: "\f057";
+      font-family: "Font Awesome 7 Free";
+      font-weight: 900;
+      flex-shrink: 0;
+      margin-top: 1px;
+      color: @brand;
+      font-size: 14px;
+    }
+  }
+}
+
+.mc-clear-modal__footer {
+  padding-bottom: 1.35rem !important;
+}
+
+.mc-clear-modal__confirm {
+  --bs-btn-bg: darken(@brand, 4%);
+  --bs-btn-border-color: darken(@brand, 4%);
+  --bs-btn-hover-bg: darken(@brand, 10%);
+  --bs-btn-hover-border-color: darken(@brand, 10%);
+  --bs-btn-active-bg: darken(@brand, 12%);
+  --bs-btn-active-border-color: darken(@brand, 12%);
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+}

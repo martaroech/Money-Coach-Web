@@ -48,16 +48,41 @@ export function buildBudgetPlan(transactions, categories, settings) {
   };
 }
 
+/**
+ * Ricategorizza una transazione e tutte quelle con la stessa descrizione (stesso nome in export Revolut).
+ * @returns {{ transactions: Transaction[], affectedCount: number }}
+ */
 export function applyCategoryToTransaction(transactions, transactionId, categoryName) {
-  return transactions.map((item) =>
-    item.id === transactionId
-      ? {
-          ...item,
-          category: categoryName,
-          manualCategory: true,
-        }
-      : item,
-  );
+  const pivot = transactions.find((item) => item.id === transactionId);
+  if (!pivot) return { transactions, affectedCount: 0 };
+
+  const key = String(pivot.description || '').trim();
+  if (!key) {
+    return {
+      transactions: transactions.map((item) =>
+        item.id === transactionId
+          ? {
+              ...item,
+              category: categoryName,
+              manualCategory: true,
+            }
+          : item,
+      ),
+      affectedCount: 1,
+    };
+  }
+
+  let affectedCount = 0;
+  const next = transactions.map((item) => {
+    if (String(item.description || '').trim() !== key) return item;
+    affectedCount += 1;
+    return {
+      ...item,
+      category: categoryName,
+      manualCategory: true,
+    };
+  });
+  return { transactions: next, affectedCount };
 }
 
 function getCoveredMonths(transactions) {

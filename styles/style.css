@@ -537,3 +537,79 @@ body.mc-modal-blur-active .modal-backdrop.show {
   border-radius: 12px;
   overflow: hidden;
 }
+.mc-clear-modal {
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #eab5be;
+}
+.modal-clear-money .modal-dialog {
+  max-width: min(392px, 100%);
+}
+.mc-clear-modal__masthead {
+  padding-top: 2px;
+}
+.mc-clear-modal__icon-wrap {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(184, 0, 34, 0.9) 0%, #710015 100%);
+  color: white;
+  font-size: 22px;
+  box-shadow: 0 10px 24px rgba(184, 0, 34, 0.0028);
+}
+.mc-clear-modal__icon-wrap .fa-database {
+  opacity: 0.95;
+}
+.mc-clear-modal__eyebrow {
+  margin: 0;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+  font-weight: 850;
+  color: #b80022;
+}
+.mc-clear-modal__list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.mc-clear-modal__list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f2ede2;
+  border: 1px solid rgba(102, 115, 109, 0.0018);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+  color: #17231e;
+}
+.mc-clear-modal__list li::before {
+  content: "\f057";
+  font-family: "Font Awesome 7 Free";
+  font-weight: 900;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #b80022;
+  font-size: 14px;
+}
+.mc-clear-modal__footer {
+  padding-bottom: 1.35rem !important;
+}
+.mc-clear-modal__confirm {
+  --bs-btn-bg: #a4001e;
+  --bs-btn-border-color: #a4001e;
+  --bs-btn-hover-bg: #850019;
+  --bs-btn-hover-border-color: #850019;
+  --bs-btn-active-bg: #7b0017;
+  --bs-btn-active-border-color: #7b0017;
+  --bs-btn-color: #fff;
+  --bs-btn-hover-color: #fff;
+}
