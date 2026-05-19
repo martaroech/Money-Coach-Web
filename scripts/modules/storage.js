@@ -26,7 +26,7 @@ export function mergeTransactions(current, incoming) {
 
 export async function loadTransactions() {
   const stored = await readRecord(STORAGE_KEY, readLegacyTransactions());
-  return normalizeTransactions(stored);
+  return normalizeStoredTransactions(stored);
 }
 
 export async function saveTransactions(transactions) {
@@ -55,11 +55,44 @@ export async function saveSettings(settings) {
 
 export async function loadCategories() {
   const stored = await readRecord(CATEGORIES_KEY, readJson(CATEGORIES_KEY));
-  return normalizeCategories(stored);
+  return normalizeStoredCategories(stored);
 }
 
 export async function saveCategories(categories) {
-  await writeRecord(CATEGORIES_KEY, normalizeCategories(categories));
+  await writeRecord(CATEGORIES_KEY, normalizeStoredCategories(categories));
+}
+
+/** Ripristino backup JSON / merge — stesse regole di caricamento da IndexedDB. */
+export function normalizeStoredTransactions(transactions) {
+  if (!Array.isArray(transactions)) return [];
+  return transactions
+    .map((item) =>
+      enrichTransaction({
+        ...item,
+        startedAt: coerceStoredDate(item.startedAt),
+        completedAt: coerceStoredDate(item.completedAt),
+      }),
+    )
+    .filter((item) => item.completedAt instanceof Date && !Number.isNaN(item.completedAt.getTime()))
+    .sort((a, b) => b.completedAt - a.completedAt);
+}
+
+export function normalizeStoredCategories(categories) {
+  const byName = new Map();
+  defaultCategories.forEach((category) => byName.set(category.name, { ...category }));
+  if (Array.isArray(categories)) {
+    categories.forEach((category) => {
+      if (!category?.name) return;
+      byName.set(category.name, {
+        ...category,
+        id: category.id || slugCategory(category.name),
+        color: category.color || '#66736d',
+        icon: category.icon || 'fa-tag',
+        monthlyGoal: Number(category.monthlyGoal) || 0,
+      });
+    });
+  }
+  return [...byName.values()];
 }
 
 async function readRecord(key, fallback) {
@@ -116,38 +149,6 @@ function requestToPromise(request) {
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
-}
-
-function normalizeTransactions(transactions) {
-  if (!Array.isArray(transactions)) return [];
-  return transactions
-    .map((item) =>
-      enrichTransaction({
-        ...item,
-        startedAt: coerceStoredDate(item.startedAt),
-        completedAt: coerceStoredDate(item.completedAt),
-      }),
-    )
-    .filter((item) => item.completedAt instanceof Date && !Number.isNaN(item.completedAt.getTime()))
-    .sort((a, b) => b.completedAt - a.completedAt);
-}
-
-function normalizeCategories(categories) {
-  const byName = new Map();
-  defaultCategories.forEach((category) => byName.set(category.name, { ...category }));
-  if (Array.isArray(categories)) {
-    categories.forEach((category) => {
-      if (!category?.name) return;
-      byName.set(category.name, {
-        ...category,
-        id: category.id || slugCategory(category.name),
-        color: category.color || '#66736d',
-        icon: category.icon || 'fa-tag',
-        monthlyGoal: Number(category.monthlyGoal) || 0,
-      });
-    });
-  }
-  return [...byName.values()];
 }
 
 function readLegacyTransactions() {

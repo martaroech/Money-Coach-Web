@@ -7,13 +7,14 @@ Versione web nativa di Money Coach, senza build tool obbligatori:
 - LESS per gli stili sorgente
 - Bootstrap locale
 - Fontawesome locale
-- dati salvati in `localStorage`
+- dati salvati nel browser (**IndexedDB**, con fallback `localStorage`): transazioni, impostazioni, categorie
+- backup manuale in **JSON** dalla scheda Coach («Esporta backup»): utile prima di cancellare i dati di Safari o della PWA
 
 ## File principali
 
 - `index.html`
 - `styles/style-min.css`
-- `scripts/script-min.js`
+- `scripts/script.js` (moduli in `scripts/modules/`)
 
 
 ## Pubblicazione GitHub Pages

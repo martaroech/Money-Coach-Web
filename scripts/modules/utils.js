@@ -30,6 +30,21 @@ export function iconFor(category) {
   return customCategoryIcons[category] || categoryIcons[category] || categoryIcons.Altro;
 }
 
+const FA_STYLE_PREFIXES = new Set(['fa-solid', 'fas', 'fa-regular', 'far', 'fab', 'fa-brands', 'fa-classic']);
+
+/** Markup `<i>` da `category.icon` (es. `fa-bus` solo solid, oppure `far fa-square-plus`). */
+export function renderCategoryIconHtml(icon) {
+  const raw = String(icon == null ? '' : icon).trim();
+  const tokens = raw.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) {
+    return '<i class="fa-solid fa-tag" aria-hidden="true"></i>';
+  }
+  const hasStyle = tokens.some((t) => FA_STYLE_PREFIXES.has(t));
+  const withStyle = hasStyle ? tokens : ['fa-solid', ...tokens];
+  const classes = withStyle.map(escapeHtml).join(' ');
+  return `<i class="${classes}" aria-hidden="true"></i>`;
+}
+
 export function setCategoryStyles(categories) {
   Object.keys(customCategoryColors).forEach((key) => delete customCategoryColors[key]);
   Object.keys(customCategoryIcons).forEach((key) => delete customCategoryIcons[key]);

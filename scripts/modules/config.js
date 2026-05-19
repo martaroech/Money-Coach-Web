@@ -44,6 +44,46 @@ export const categoryIcons = {
   Altro: 'fa-tag',
 };
 
+/** Classi icone già usate dalle categorie predefinite (escluse dal selettore «nuova categoria»). */
+export const BUILT_IN_ICON_CLASS_TOKENS = new Set(
+  Object.values(categoryIcons)
+    .join(' ')
+    .split(/\s+/)
+    .filter((token) => token.startsWith('fa-')),
+);
+
+/**
+ * Circa 30 icone Font Awesome Solid per nuove categorie, senza ripetere quelle built-in.
+ */
+export const CATEGORY_ICON_PICKER_ICONS = [
+  'fa-mug-hot',
+  'fa-film',
+  'fa-dumbbell',
+  'fa-paw',
+  'fa-gift',
+  'fa-wrench',
+  'fa-mobile-screen-button',
+  'fa-book',
+  'fa-landmark',
+  'fa-gas-pump',
+  'fa-car-side',
+  'fa-train',
+  'fa-gamepad',
+  'fa-burger',
+  'fa-pills',
+].filter((cls) => !BUILT_IN_ICON_CLASS_TOKENS.has(cls));
+
+export const NEW_CATEGORY_COLOR_ROTATION = [
+  '#5c6bc0',
+  '#00897b',
+  '#fb8c00',
+  '#7e57c2',
+  '#43a047',
+  '#d81b60',
+  '#3949ab',
+  '#6d4c41',
+];
+
 export const budgets = {
   Casa: 650,
   Spesa: 420,

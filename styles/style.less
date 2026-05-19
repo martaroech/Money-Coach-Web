@@ -32,37 +32,12 @@ input {
 }
 
 .app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-
   h1 {
     margin: 0;
     font-size: 31px;
     font-weight: 850;
     letter-spacing: 0;
   }
-}
-
-.eyebrow {
-  margin: 0 0 2px;
-  color: @brand;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.icon-btn {
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 0;
-  border-radius: 999px;
-  background: @brand-soft;
-  color: @brand;
 }
 
 .page {
@@ -99,12 +74,6 @@ input {
   }
 
   .hero-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 0;
-
     .hero-label {
       flex: 1;
       min-width: 0;
@@ -138,19 +107,9 @@ input {
 }
 
 .hero-label {
-  display: flex;
-  gap: 8px;
-  align-items: center;
   color: @brand-soft;
   font-size: 13px;
   font-weight: 800;
-}
-
-.metric-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 18px;
 }
 
 .metric-card,
@@ -186,12 +145,6 @@ input {
 }
 
 .section-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 22px 0 10px;
-
   h2 {
     margin: 0;
     font-size: 21px;
@@ -202,15 +155,6 @@ input {
     color: @muted;
     font-size: 13px;
   }
-}
-
-.stack {
-  display: grid;
-  gap: 10px;
-}
-
-.data-card {
-  padding: 16px;
 }
 
 .breakdown-row {
@@ -246,12 +190,6 @@ input {
   height: 8px;
   border-radius: 999px;
   background: @line;
-}
-
-.toolbar-stack {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 18px;
 }
 
 .search-box {
@@ -297,13 +235,6 @@ input {
   }
 }
 
-.chip-row {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
 .chip {
   flex: 0 0 auto;
   border: 1px solid @line;
@@ -328,7 +259,6 @@ input {
 
 .group-head,
 .transaction-card,
-.coach-card,
 .merchant-card {
   display: flex;
   align-items: center;
@@ -375,12 +305,6 @@ input {
   }
 }
 
-.group-total {
-  display: grid;
-  gap: 4px;
-  justify-items: end;
-}
-
 .compact-list {
   display: grid;
   gap: 8px;
@@ -409,11 +333,6 @@ input {
   }
 }
 
-.compact-main {
-  display: grid;
-  gap: 4px;
-}
-
 .transaction-card,
 .merchant-card {
   padding: 14px;
@@ -429,28 +348,173 @@ input {
   }
 }
 
-.category-select {
-  max-width: 180px;
+// Dropdown categorie su lista Spese — markup Bootstrap `.dropdown` + Popper (`strategy: fixed` nel template scappa da `.group-card { overflow: hidden }`).
+.mc-expense-cat-dd {
+  &__toggle {
+    min-height: 44px;
+    padding: 7px 10px !important;
+    border: 1px solid @line !important;
+    border-radius: 8px !important;
+    background: @surface !important;
+    color: @ink !important;
+    font-size: 14px;
+    font-weight: 650;
+
+    &::after {
+      display: none;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px fade(@brand, 25%);
+      border-color: fade(@brand, 55%) !important;
+    }
+
+    &.show .mc-expense-cat-dd__chev {
+      transform: rotate(180deg);
+      color: @brand;
+    }
+  }
+
+  &__chev {
+    font-size: 12px;
+    color: @muted;
+    transition: transform 0.14s ease;
+  }
+
+  &__trig-ico {
+    display: grid;
+    width: 34px !important;
+    height: 34px !important;
+    flex-shrink: 0;
+    place-items: center;
+    font-size: 15px;
+  }
+
+  &__menu {
+    z-index: 1000 !important;
+    margin-top: 4px !important;
+    padding: 6px !important;
+    border-radius: 10px !important;
+    border: 1px solid darken(@line, 4%) !important;
+    background: @surface !important;
+    box-shadow: 0 18px 40px fade(#000, 18%) !important;
+    max-height: min(316px, 52vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    min-width: min(100vw - 32px, 396px);
+  }
+
+  &__option {
+    border-radius: 7px !important;
+    padding: 10px !important;
+    font-size: 14px;
+    font-weight: 650;
+    color: @ink !important;
+    transition: background 0.14s ease;
+
+    &:active {
+      transform: scale(0.993);
+    }
+  }
+
+  &__opt-ico {
+    display: grid;
+    width: 34px !important;
+    height: 34px !important;
+    flex-shrink: 0;
+    place-items: center;
+    font-size: 15px;
+  }
+
+  &__opt-txt {
+    min-width: 0;
+  }
+
+  &__check-slot {
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  &__check {
+    color: @brand;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  &__option:hover,
+  &__option:focus-visible {
+    background: darken(@paper, 2%) !important;
+    color: @ink !important;
+  }
+
+  &__option--selected {
+    background: fade(@brand-soft, 78%) !important;
+    color: @brand !important;
+    font-weight: 800;
+
+    &:hover,
+    &:focus-visible {
+      background: fade(@brand-soft, 88%) !important;
+      color: @brand !important;
+    }
+  }
 }
 
-.category-editor-list {
-  display: grid;
-  gap: 10px;
+.category-editor-row__goal-input {
+  width: 4.25rem;
+  max-width: 100%;
 }
 
-.category-editor-row {
+.category-editor-row--deletable {
+  .category-editor-row__del {
+    .fa-trash-can {
+      font-size: 16px;
+    }
+  }
+}
+
+.mc-category-create-card .mc-icon-picker {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 92px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
-  align-items: center;
 }
 
-.coach-card {
-  align-items: flex-start;
+.mc-icon-pick {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 2px solid @line;
+  border-radius: 8px;
+  background: darken(@surface, 1%);
+  color: @ink;
+
+  &__inner {
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+  }
+
+  &.mc-icon-pick--selected,
+  &.mc-icon-pick--selected:hover {
+    border-color: @brand;
+    background: fade(@brand-soft, 92%);
+    color: @brand;
+  }
+
+  &:hover {
+    border-color: fade(@brand, 45%);
+    background: @surface;
+  }
 }
 
-.action-panel,
-.privacy-panel {
+.mc-category-list-card small {
+  line-height: 1.38;
+}
+
+.action-panel {
   display: flex;
   gap: 12px;
   align-items: flex-start;
@@ -478,14 +542,24 @@ input {
 }
 
 .privacy-panel {
-  display: grid;
+  padding: 16px;
+  border-radius: 8px;
   background: @surface;
+
+  h2 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 850;
+  }
+
+  p {
+    margin: 0;
+    color: fade(@ink, 75%);
+    font-size: 13px;
+  }
 }
 
 .empty-state {
-  display: grid;
-  gap: 6px;
-
   i {
     color: @brand;
     font-size: 20px;
@@ -724,12 +798,8 @@ body.mc-modal-blur-active .modal-backdrop.show {
   background: @surface;
 
   .modal-body {
-    max-height: min(62vh, 440px);
+    max-height: min(72vh, 520px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-  }
-
-  .category-editor-row {
-    grid-template-columns: 42px minmax(0, 1fr) 88px;
   }
 }

@@ -6,23 +6,36 @@ import {
   filterTransactionsByPeriod,
   getTransactionDateBounds,
 } from './periodFilter.js';
+import {
+  LAST_BACKUP_EXPORT_KEY,
+  backupFilenameSuggestion,
+  buildBackupPayload,
+  getLastBackupExportHint,
+  parseMoneyCoachBackup,
+  rememberBackupExportTimestamp,
+  shareOrDownloadBackupJson,
+} from './backup.js';
 import { parseRevolutCsv } from './csvImporter.js';
+import { NEW_CATEGORY_COLOR_ROTATION } from './config.js';
 import {
   clearTransactions,
   loadCategories,
   loadSettings,
   loadTransactions,
   mergeTransactions,
+  normalizeStoredCategories,
+  normalizeStoredTransactions,
   saveCategories,
   saveSettings,
   saveTransactions,
 } from './storage.js';
 import {
-  budgetSummaryCard,
+  budgetCategoryPanel,
   budgetRow,
-  categoryEditor,
+  budgetSummaryCard,
   coachCard,
   emptyState,
+  expenseCategoriesModalBody,
   groupCard,
   merchantCard,
   metricCard,
@@ -42,6 +55,9 @@ const state = {
   categories: [],
 };
 
+/** Oggetto restituito da `parseMoneyCoachBackup` finché l’utente non conferma o chiude il modale. */
+let pendingBackupRestore = null;
+
 export async function initApp() {
   bindEvents();
   const [transactions, settings, categories] = await Promise.all([
@@ -54,6 +70,80 @@ export async function initApp() {
   state.categories = categories;
   setCategoryStyles(state.categories);
   render();
+}
+
+async function handleExportBackup() {
+  const payload = buildBackupPayload(state);
+  const json = JSON.stringify(payload, null, 2);
+  const filename = backupFilenameSuggestion();
+  const mode = await shareOrDownloadBackupJson(json, filename);
+  if (mode === 'aborted') return;
+  rememberBackupExportTimestamp();
+  updateBackupHintDom();
+  if (mode === 'share') {
+    showToast('Backup condiviso. Salva il file in File o iCloud se non l’hai già fatto.');
+  } else {
+    showToast('Backup scaricato.');
+  }
+}
+
+function formatBackupRestoreSummaryHtml(data) {
+  let dateLabel = '—';
+  if (data.exportedAt) {
+    const d = new Date(data.exportedAt);
+    if (!Number.isNaN(d.getTime())) {
+      dateLabel = d.toLocaleString('it-IT', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+  }
+  const tx = Array.isArray(data.transactions) ? data.transactions.length : 0;
+  const cat = Array.isArray(data.categories) ? data.categories.length : 0;
+  return `<ul class="mb-0 ps-3"><li>Esportazione: ${escapeHtml(dateLabel)}</li><li>Transazioni nel file: ${tx}</li><li>Voci categorie nel file: ${cat}</li></ul>`;
+}
+
+function updateBackupHintDom() {
+  const el = document.getElementById('backupLastHint');
+  if (!el) return;
+  const hint = getLastBackupExportHint();
+  if (hint) {
+    el.textContent = `Ultimo backup esportato: ${hint}`;
+    el.classList.remove('d-none');
+  } else {
+    el.textContent = '';
+    el.classList.add('d-none');
+  }
+}
+
+async function executeBackupRestore() {
+  if (!pendingBackupRestore) return;
+  const data = pendingBackupRestore;
+  state.transactions = normalizeStoredTransactions(data.transactions);
+  state.categories = normalizeStoredCategories(data.categories);
+  state.settings = data.settings;
+  if (data.ui) {
+    state.expenseView = data.ui.expenseView === 'list' ? 'list' : 'grouped';
+    state.expenseFilter = typeof data.ui.expenseFilter === 'string' ? data.ui.expenseFilter : 'Tutte';
+    state.expenseQuery = typeof data.ui.expenseQuery === 'string' ? data.ui.expenseQuery : '';
+    state.expandedCategories = new Set(
+      Array.isArray(data.ui.expandedCategories)
+        ? data.ui.expandedCategories.filter((x) => typeof x === 'string')
+        : [],
+    );
+  } else {
+    state.expenseFilter = 'Tutte';
+    state.expenseQuery = '';
+    state.expandedCategories.clear();
+  }
+  await Promise.all([
+    saveTransactions(state.transactions),
+    saveCategories(state.categories),
+    saveSettings(state.settings),
+  ]);
+  setCategoryStyles(state.categories);
+  pendingBackupRestore = null;
+  window.bootstrap?.Modal?.getInstance(document.getElementById('backupRestoreModal'))?.hide();
+  syncPeriodInputsFromState();
+  render();
+  showToast(`Ripristino completato (${state.transactions.length} transazioni).`);
 }
 
 function bindEvents() {
@@ -82,18 +172,15 @@ function bindEvents() {
   document.getElementById('clearDataButton').addEventListener('click', openClearDataModal);
   document.getElementById('confirmClearDataButton').addEventListener('click', executeClearLocalData);
 
+  function syncMoneyCoachModalBlur() {
+    const ids = ['periodFilterModal', 'clearDataModal', 'expenseCategoriesModal', 'backupRestoreModal'];
+    const anyOpen = ids.some((id) => document.getElementById(id)?.classList.contains('show'));
+    document.body.classList.toggle('mc-modal-blur-active', anyOpen);
+  }
+
   const clearDataModalEl = document.getElementById('clearDataModal');
-  clearDataModalEl.addEventListener('show.bs.modal', () => {
-    document.body.classList.add('mc-modal-blur-active');
-  });
-  clearDataModalEl.addEventListener('hidden.bs.modal', () => {
-    if (
-      !document.getElementById('periodFilterModal')?.classList.contains('show') &&
-      !document.getElementById('expenseCategoriesModal')?.classList.contains('show')
-    ) {
-      document.body.classList.remove('mc-modal-blur-active');
-    }
-  });
+  clearDataModalEl.addEventListener('show.bs.modal', syncMoneyCoachModalBlur);
+  clearDataModalEl.addEventListener('hidden.bs.modal', syncMoneyCoachModalBlur);
 
   document.getElementById('periodStartInput').addEventListener('change', handlePeriodInputsChange);
   document.getElementById('periodEndInput').addEventListener('change', handlePeriodInputsChange);
@@ -101,41 +188,113 @@ function bindEvents() {
 
   const periodModalEl = document.getElementById('periodFilterModal');
   periodModalEl.addEventListener('show.bs.modal', () => {
-    document.body.classList.add('mc-modal-blur-active');
+    syncMoneyCoachModalBlur();
     syncPeriodInputsFromState();
   });
-  periodModalEl.addEventListener('hidden.bs.modal', () => {
-    if (
-      !document.getElementById('clearDataModal')?.classList.contains('show') &&
-      !document.getElementById('expenseCategoriesModal')?.classList.contains('show')
-    ) {
-      document.body.classList.remove('mc-modal-blur-active');
-    }
-  });
+  periodModalEl.addEventListener('hidden.bs.modal', syncMoneyCoachModalBlur);
 
   const expenseCategoriesModalEl = document.getElementById('expenseCategoriesModal');
   expenseCategoriesModalEl.addEventListener('show.bs.modal', () => {
-    document.body.classList.add('mc-modal-blur-active');
+    syncMoneyCoachModalBlur();
     mountExpenseCategoriesModal();
   });
-  expenseCategoriesModalEl.addEventListener('hidden.bs.modal', () => {
-    if (
-      !document.getElementById('periodFilterModal')?.classList.contains('show') &&
-      !document.getElementById('clearDataModal')?.classList.contains('show')
-    ) {
-      document.body.classList.remove('mc-modal-blur-active');
-    }
+  expenseCategoriesModalEl.addEventListener('hidden.bs.modal', syncMoneyCoachModalBlur);
+
+  const backupRestoreModalEl = document.getElementById('backupRestoreModal');
+  backupRestoreModalEl.addEventListener('show.bs.modal', syncMoneyCoachModalBlur);
+  backupRestoreModalEl.addEventListener('hidden.bs.modal', () => {
+    pendingBackupRestore = null;
+    syncMoneyCoachModalBlur();
   });
 
   document.getElementById('openExpenseCategoriesModal').addEventListener('click', () => {
     window.bootstrap?.Modal?.getOrCreateInstance(expenseCategoriesModalEl)?.show();
+  });
+
+  document.getElementById('exportBackupButton').addEventListener('click', () => {
+    handleExportBackup().catch((err) => {
+      console.error(err);
+      showToast('Impossibile creare il backup.');
+    });
+  });
+  document.getElementById('importBackupButton').addEventListener('click', () => {
+    document.getElementById('backupImportInput').click();
+  });
+  document.getElementById('backupImportInput').addEventListener('change', async (event) => {
+    const input = event.target;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    try {
+      const text = await file.text();
+      pendingBackupRestore = parseMoneyCoachBackup(text);
+      document.getElementById('backupRestoreSummary').innerHTML =
+        formatBackupRestoreSummaryHtml(pendingBackupRestore);
+      window.bootstrap?.Modal?.getOrCreateInstance(backupRestoreModalEl)?.show();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Backup non valido.');
+    }
+  });
+  document.getElementById('confirmBackupRestoreButton').addEventListener('click', () => {
+    executeBackupRestore().catch((err) => {
+      console.error(err);
+      showToast('Errore durante il ripristino.');
+    });
+  });
+
+  const expensesPageEl = document.getElementById('expensesPage');
+  expensesPageEl.addEventListener('show.bs.dropdown', (event) => {
+    const toggle = event.target;
+    if (!(toggle instanceof Element) || !toggle.matches('[data-bs-toggle="dropdown"]')) return;
+    if (!expensesPageEl.contains(toggle)) return;
+    expensesPageEl.querySelectorAll('[data-bs-toggle="dropdown"].show').forEach((openBtn) => {
+      if (openBtn !== toggle) {
+        window.bootstrap?.Dropdown?.getInstance(openBtn)?.hide();
+      }
+    });
+  });
+
+  expensesPageEl.addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('[data-pick-cat]');
+    if (!btn || !expensesPageEl.contains(btn)) return;
+
+    const wrapper = btn.closest('[data-transaction-picker]');
+    if (!wrapper) return;
+
+    let transactionId = '';
+    try {
+      transactionId = decodeURIComponent(wrapper.getAttribute('data-transaction-picker') || '');
+    } catch {
+      transactionId = wrapper.getAttribute('data-transaction-picker') || '';
+    }
+    let value = '';
+    try {
+      value = decodeURIComponent(btn.getAttribute('data-pick-cat') || '');
+    } catch {
+      value = btn.getAttribute('data-pick-cat') || '';
+    }
+    if (!value || !transactionId) return;
+
+    const toggle = wrapper.querySelector('[data-bs-toggle="dropdown"]');
+    if (toggle) window.bootstrap?.Dropdown?.getInstance(toggle)?.hide();
+
+    const result = applyCategoryToTransaction(state.transactions, transactionId, value);
+    state.transactions = result.transactions;
+    await saveTransactions(state.transactions);
+    render();
+    showToast(
+      result.affectedCount > 1
+        ? `Ricategoria applicata a ${result.affectedCount} movimenti con la stessa voce.`
+        : 'Spesa ricategorizzata.',
+    );
   });
 }
 
 function mountExpenseCategoriesModal() {
   const body = document.getElementById('expenseCategoriesModalBody');
   if (!body) return;
-  body.innerHTML = categoryEditor(state.categories);
+  body.innerHTML = expenseCategoriesModalBody(state.categories);
+  bindCategoryCreationForm(body);
   bindCategoryEditorListeners(body);
 }
 
@@ -192,6 +351,11 @@ async function executeClearLocalData() {
   try {
     modalInst?.hide();
     await clearTransactions();
+    try {
+      localStorage.removeItem(LAST_BACKUP_EXPORT_KEY);
+    } catch {
+      /* ignore */
+    }
     state.transactions = [];
     state.settings.analyticsPeriodStart = '';
     state.settings.analyticsPeriodEnd = '';
@@ -300,6 +464,7 @@ function render() {
   renderExpenses();
   renderBudget();
   renderCoach();
+  updateBackupHintDom();
 }
 
 function renderNavigation() {
@@ -357,7 +522,7 @@ function renderDashboard() {
   heroImportBtn.classList.remove('d-none');
   if (hasFullData) {
     heroImportBtn.innerHTML =
-      '<i class="fa-solid fa-file-circle-plus me-2"></i>Aggiungi mese (CSV)';
+      '<i class="fa-solid fa-file-circle-plus me-2"></i>Carica CSV';
     heroImportBtn.className = 'btn btn-outline-light btn-sm fw-bold mt-2';
   } else {
     heroImportBtn.innerHTML = '<i class="fa-solid fa-file-arrow-down me-2"></i>Importa CSV';
@@ -389,6 +554,8 @@ function renderDashboard() {
 }
 
 function renderExpenses() {
+  closeAllExpenseCategoryDropdowns();
+
   document.querySelectorAll('[data-view]').forEach((button) => {
     button.classList.toggle('active', button.dataset.view === state.expenseView);
   });
@@ -455,8 +622,6 @@ function renderExpenses() {
       renderExpenses();
     });
   });
-
-  bindTransactionCategorySelectors();
 }
 
 function renderBudget() {
@@ -480,7 +645,7 @@ function renderBudget() {
       ),
     )
     .join('');
-  document.getElementById('categoryManager').innerHTML = categoryEditor(state.categories);
+  document.getElementById('categoryManager').innerHTML = budgetCategoryPanel(state.categories);
   bindBudgetControls();
 }
 
@@ -511,29 +676,110 @@ function matchesExpenseSearch(item, query) {
 }
 
 function bindBudgetControls() {
-  bindCategoryEditorListeners(document.getElementById('categoryManager'));
-}
-
-/**
- * Gestisce aggiunta, rinomina e obiettivo delle categorie dentro un contenitore
- * (scheda Budget o modale Spese).
- */
-function bindCategoryEditorListeners(root) {
+  const root = document.getElementById('categoryManager');
   if (!root) return;
-
-  root.querySelector('[data-add-category]')?.addEventListener('click', async () => {
+  root.querySelector('[data-add-category-budget]')?.addEventListener('click', async () => {
     const name = uniqueCategoryName('Nuova categoria');
     state.categories.push({
       id: slugCategory(name),
       name,
-      color: '#66736d',
+      color: NEW_CATEGORY_COLOR_ROTATION[state.categories.length % NEW_CATEGORY_COLOR_ROTATION.length],
       icon: 'fa-tag',
       monthlyGoal: 0,
     });
     await persistCategories();
     render();
     refreshExpenseCategoriesModalIfOpen();
+    showToast('Categoria veloce aggiunta: personalizza nome e icona da Spese → Gestisci categorie.');
   });
+  bindCategoryEditorListeners(root);
+}
+
+/**
+ * Form «Nuova categoria» nel modale Spese (icona + Crea).
+ */
+function bindCategoryCreationForm(root) {
+  const picker = root.querySelector('.mc-icon-picker');
+  const nameInput = root.querySelector('#newCategoryNameInput');
+  const createBtn = root.querySelector('[data-create-category]');
+
+  /** @type {HTMLElement[]} */
+  const pickBtns = picker ? [...picker.querySelectorAll('[data-picker-icon]')] : [];
+
+  let selectedIcon = pickBtns[0]?.dataset.pickerIcon || 'fa-circle';
+
+  function setSelected(btn) {
+    selectedIcon = btn.dataset.pickerIcon || selectedIcon;
+    pickBtns.forEach((b) => {
+      b.classList.toggle('mc-icon-pick--selected', b === btn);
+      b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+    });
+  }
+
+  pickBtns.forEach((btn) => {
+    btn.addEventListener('click', () => setSelected(btn));
+  });
+
+  createBtn?.addEventListener('click', async () => {
+    const raw = (nameInput?.value || '').trim();
+    if (!raw) {
+      showToast('Inserisci un nome per la categoria.');
+      nameInput?.focus();
+      return;
+    }
+    if (state.categories.some((c) => c.name.toLowerCase() === raw.toLowerCase())) {
+      showToast('Esiste già una categoria con questo nome.');
+      return;
+    }
+    const name = raw.length > 48 ? raw.slice(0, 48) : raw;
+    state.categories.push({
+      id: slugCategory(name),
+      name,
+      color: NEW_CATEGORY_COLOR_ROTATION[state.categories.length % NEW_CATEGORY_COLOR_ROTATION.length],
+      icon: selectedIcon,
+      monthlyGoal: 0,
+    });
+    await persistCategories();
+    render();
+    refreshExpenseCategoriesModalIfOpen();
+    showToast('Categoria creata.');
+    if (nameInput) nameInput.value = '';
+    if (pickBtns[0]) setSelected(pickBtns[0]);
+  });
+}
+
+async function deleteCategoryByName(categoryName) {
+  if (state.categories.length <= 1) {
+    showToast('Serve almeno una categoria.');
+    return;
+  }
+  const exists = state.categories.some((c) => c.name === categoryName);
+  if (!exists) return;
+  const fallback =
+    state.categories.find((c) => c.name === 'Altro' && c.name !== categoryName) ||
+    state.categories.find((c) => c.name !== categoryName);
+  if (!fallback) return;
+
+  const ok = window.confirm(
+    `Eliminare «${categoryName}»?\nLe spese e le riclassifiche useranno la categoria «${fallback.name}».`,
+  );
+  if (!ok) return;
+
+  state.categories = state.categories.filter((c) => c.name !== categoryName);
+  state.transactions = state.transactions.map((item) =>
+    item.category === categoryName ? { ...item, category: fallback.name } : item,
+  );
+  await Promise.all([persistCategories(), saveTransactions(state.transactions)]);
+  render();
+  refreshExpenseCategoriesModalIfOpen();
+  showToast(`Categoria «${categoryName}» eliminata.`);
+}
+
+/**
+ * Elenco modificabile delle categorie (rinomina, obiettivo, elimina) dentro `root`.
+ */
+function bindCategoryEditorListeners(root) {
+  if (!root) return;
 
   root.querySelectorAll('[data-category-name]').forEach((input) => {
     input.addEventListener('change', async () => {
@@ -541,6 +787,14 @@ function bindCategoryEditorListeners(root) {
       const nextName = input.value.trim();
       if (!nextName) {
         input.value = previousName;
+        return;
+      }
+      if (
+        nextName !== previousName &&
+        state.categories.some((c) => c.name === nextName)
+      ) {
+        input.value = previousName;
+        showToast('Esiste già una categoria con questo nome.');
         return;
       }
 
@@ -580,6 +834,13 @@ function bindCategoryEditorListeners(root) {
       showToast('Obiettivo categoria aggiornato.');
     });
   });
+
+  root.querySelectorAll('[data-delete-category]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const nm = btn.getAttribute('data-delete-category');
+      if (nm) deleteCategoryByName(nm);
+    });
+  });
 }
 
 async function handleSavingsTargetChange(event) {
@@ -589,23 +850,12 @@ async function handleSavingsTargetChange(event) {
   showToast('Obiettivo di risparmio aggiornato.');
 }
 
-function bindTransactionCategorySelectors() {
-  document.querySelectorAll('[data-transaction-category]').forEach((select) => {
-      select.addEventListener('change', async () => {
-      const result = applyCategoryToTransaction(
-        state.transactions,
-        select.dataset.transactionCategory,
-        select.value,
-      );
-      state.transactions = result.transactions;
-      await saveTransactions(state.transactions);
-      render();
-      showToast(
-        result.affectedCount > 1
-          ? `Ricategoria applicata a ${result.affectedCount} movimenti con la stessa voce.`
-          : 'Spesa ricategorizzata.',
-      );
-    });
+/** Chiude tutti i dropdown categoria Bootstrap sulla pagina Spese (prima di un nuovo render). */
+function closeAllExpenseCategoryDropdowns() {
+  const root = document.getElementById('expensesPage');
+  if (!root) return;
+  root.querySelectorAll('[data-bs-toggle="dropdown"]').forEach((toggle) => {
+    window.bootstrap?.Dropdown?.getInstance(toggle)?.hide();
   });
 }
 

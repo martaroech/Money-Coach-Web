@@ -22,14 +22,14 @@
   </head>
   <body>
     <main class="app-shell container px-3">
-      <header class="app-header d-flex align-items-center justify-content-center">
+      <header class="app-header d-flex align-items-center justify-content-center gap-3 mb-3">
         <h1>Money Coach</h1>
       </header>
       <input id="csvInput" class="d-none" type="file" accept=".csv,text/csv">
 
       <section id="dashboardPage" class="page active" aria-labelledby="dashboardTitle">
         <div class="card hero-panel border-0">
-          <div class="hero-top">
+          <div class="hero-top d-flex align-items-center justify-content-between gap-2">
             <div class="hero-label d-flex align-items-center gap-2">
               <i class="fa-solid fa-shield-halved"></i>
               <span>Dati sul dispositivo</span>
@@ -55,17 +55,17 @@
 
         <div id="metricGrid" class="row g-2 mt-3"></div>
 
-        <div class="section-heading d-flex align-items-end justify-content-between">
+        <div class="section-heading d-flex align-items-end justify-content-between gap-3 mb-2">
           <h2>Categorie</h2>
           <span id="categoryCount" class="badge rounded-pill text-bg-light">In attesa</span>
         </div>
-        <div id="categoryBreakdown" class="stack"></div>
+        <div id="categoryBreakdown" class="d-grid gap-2"></div>
 
-        <div class="section-heading d-flex align-items-end justify-content-between">
+        <div class="section-heading d-flex align-items-end justify-content-between gap-3 mt-4 mb-2">
           <h2>Coach</h2>
           <span id="coachCount" class="badge rounded-pill text-bg-light">0 note</span>
         </div>
-        <div id="coachPreview" class="stack"></div>
+        <div id="coachPreview" class="d-grid gap-2"></div>
       </section>
 
       <section id="expensesPage" class="page" aria-labelledby="expensesTitle">
@@ -77,7 +77,7 @@
             <i class="fa-solid fa-tags me-2"></i>Gestisci categorie
           </button>
         </div>
-        <div class="toolbar-stack">
+        <div class="d-grid gap-3 mb-4">
           <div class="input-group search-box">
             <span class="input-group-text border-0 bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
             <input id="expenseSearch" class="form-control border-0 shadow-none" type="search" placeholder="Cerca spesa, categoria o importo" autocomplete="off">
@@ -86,9 +86,9 @@
             <button class="nav-link active" type="button" data-view="grouped">Gruppi</button>
             <button class="nav-link" type="button" data-view="list">Lista</button>
           </div>
-          <div id="categoryFilters" class="chip-row d-flex gap-2 overflow-auto"></div>
+          <div id="categoryFilters" class="d-flex gap-2 overflow-auto pb-1"></div>
         </div>
-        <div id="expensesList" class="stack"></div>
+        <div id="expensesList" class="d-grid gap-2"></div>
       </section>
 
       <section id="budgetPage" class="page" aria-labelledby="budgetTitle">
@@ -108,33 +108,46 @@
             </div>
           </div>
         </div>
-        <div id="budgetSummary" class="stack mb-3"></div>
-        <div id="budgetList" class="stack"></div>
-        <div class="section-heading d-flex align-items-end justify-content-between">
+        <div id="budgetSummary" class="d-grid gap-2 mb-3"></div>
+        <div id="budgetList" class="d-grid gap-2"></div>
+        <div class="section-heading d-flex align-items-end justify-content-between gap-3 mt-4 mb-2">
           <h2>Categorie</h2>
           <span class="badge rounded-pill text-bg-light">Modificabili</span>
         </div>
-        <div id="categoryManager" class="stack"></div>
+        <div id="categoryManager" class="d-grid gap-2"></div>
       </section>
 
       <section id="coachPage" class="page" aria-labelledby="coachTitle">
-        <div id="coachList" class="stack"></div>
+        <div id="coachList" class="d-grid gap-2"></div>
 
-        <div class="section-heading d-flex align-items-end justify-content-between">
+        <div class="section-heading d-flex align-items-end justify-content-between gap-3 mt-4 mb-2">
           <h2>Esercenti top</h2>
           <span id="merchantCount" class="badge rounded-pill text-bg-light">0</span>
         </div>
-        <div id="merchantList" class="stack"></div>
+        <div id="merchantList" class="d-grid gap-2"></div>
 
         <div class="card privacy-panel border-0 mt-4">
-          <div>
+          <div class="mb-2">
             <h2><i class="fa-solid fa-lock me-2"></i>Privacy by design</h2>
-            <p>CSV, categorie e analisi restano nel browser. Nessun server e nessuna API obbligatoria.</p>
+            <p>
+              CSV, categorie e analisi restano sul dispositivo; nessun server obbligatorio. Esporta di tanto in tanto un file JSON e salvalo in
+              <strong>File</strong> o <strong>iCloud</strong>: così non perdi nulla se cancelli i dati di Safari.
+            </p>
+            <p id="backupLastHint" class="small text-secondary mb-0 d-none" role="status"></p>
           </div>
-          <button id="clearDataButton" class="btn btn-outline-danger btn-sm" type="button">
-            <i class="fa-solid fa-trash me-2"></i>Cancella dati locali
-          </button>
+          <div class="d-flex flex-column gap-2 align-items-stretch">
+            <button id="exportBackupButton" type="button" class="btn btn-brand-soft btn-sm fw-bold">
+              <i class="fa-solid fa-download me-2"></i>Esporta backup (JSON)
+            </button>
+            <button id="importBackupButton" type="button" class="btn btn-outline-secondary btn-sm fw-bold">
+              <i class="fa-solid fa-upload me-2"></i>Ripristina da backup
+            </button>
+            <button id="clearDataButton" type="button" class="btn btn-outline-danger btn-sm fw-bold">
+              <i class="fa-solid fa-trash me-2"></i>Cancella dati locali
+            </button>
+          </div>
         </div>
+        <input id="backupImportInput" type="file" class="d-none" accept="application/json,.json,text/json" />
       </section>
 
       <nav class="bottom-nav nav nav-pills nav-fill" aria-label="Navigazione principale">
@@ -261,6 +274,38 @@
             </button>
             <button type="button" class="btn btn-sm fw-bold px-4 w-100 mc-clear-modal__confirm" id="confirmClearDataButton">
               <i class="fa-solid fa-trash-can me-2"></i>Sì, cancella tutto
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade modal-period-money"
+      id="backupRestoreModal"
+      tabindex="-1"
+      aria-labelledby="backupRestoreModalTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered px-3">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header border-0 pb-0">
+            <h2 class="modal-title h5 fw-bold" id="backupRestoreModalTitle">Ripristinare questo backup?</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+          </div>
+          <div class="modal-body pt-2 pb-3">
+            <p class="text-secondary small mb-3">
+              Verranno <strong>sostituiti</strong> in questo browser transazioni, categorie personalizzate e impostazioni (incluso il periodo delle analisi)
+              con il contenuto del file. L’azione non è annullabile dal pulsante «Annulla» dopo aver confermato.
+            </p>
+            <div id="backupRestoreSummary" class="small"></div>
+          </div>
+          <div class="modal-footer border-0 flex-column flex-sm-row gap-2 pt-0">
+            <button type="button" class="btn btn-outline-secondary btn-sm fw-bold px-4 w-100" data-bs-dismiss="modal">
+              Annulla
+            </button>
+            <button type="button" class="btn btn-brand btn-sm fw-bold px-4 w-100" id="confirmBackupRestoreButton">
+              <i class="fa-solid fa-rotate-left me-2"></i>Sì, ripristina
             </button>
           </div>
         </div>
