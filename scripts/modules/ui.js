@@ -87,7 +87,10 @@ function bindEvents() {
     document.body.classList.add('mc-modal-blur-active');
   });
   clearDataModalEl.addEventListener('hidden.bs.modal', () => {
-    if (!document.getElementById('periodFilterModal')?.classList.contains('show')) {
+    if (
+      !document.getElementById('periodFilterModal')?.classList.contains('show') &&
+      !document.getElementById('expenseCategoriesModal')?.classList.contains('show')
+    ) {
       document.body.classList.remove('mc-modal-blur-active');
     }
   });
@@ -102,10 +105,45 @@ function bindEvents() {
     syncPeriodInputsFromState();
   });
   periodModalEl.addEventListener('hidden.bs.modal', () => {
-    if (!document.getElementById('clearDataModal')?.classList.contains('show')) {
+    if (
+      !document.getElementById('clearDataModal')?.classList.contains('show') &&
+      !document.getElementById('expenseCategoriesModal')?.classList.contains('show')
+    ) {
       document.body.classList.remove('mc-modal-blur-active');
     }
   });
+
+  const expenseCategoriesModalEl = document.getElementById('expenseCategoriesModal');
+  expenseCategoriesModalEl.addEventListener('show.bs.modal', () => {
+    document.body.classList.add('mc-modal-blur-active');
+    mountExpenseCategoriesModal();
+  });
+  expenseCategoriesModalEl.addEventListener('hidden.bs.modal', () => {
+    if (
+      !document.getElementById('periodFilterModal')?.classList.contains('show') &&
+      !document.getElementById('clearDataModal')?.classList.contains('show')
+    ) {
+      document.body.classList.remove('mc-modal-blur-active');
+    }
+  });
+
+  document.getElementById('openExpenseCategoriesModal').addEventListener('click', () => {
+    window.bootstrap?.Modal?.getOrCreateInstance(expenseCategoriesModalEl)?.show();
+  });
+}
+
+function mountExpenseCategoriesModal() {
+  const body = document.getElementById('expenseCategoriesModalBody');
+  if (!body) return;
+  body.innerHTML = categoryEditor(state.categories);
+  bindCategoryEditorListeners(body);
+}
+
+function refreshExpenseCategoriesModalIfOpen() {
+  const modal = document.getElementById('expenseCategoriesModal');
+  if (modal?.classList.contains('show')) {
+    mountExpenseCategoriesModal();
+  }
 }
 
 function openImporter() {
@@ -473,7 +511,17 @@ function matchesExpenseSearch(item, query) {
 }
 
 function bindBudgetControls() {
-  document.getElementById('addCategoryButton')?.addEventListener('click', async () => {
+  bindCategoryEditorListeners(document.getElementById('categoryManager'));
+}
+
+/**
+ * Gestisce aggiunta, rinomina e obiettivo delle categorie dentro un contenitore
+ * (scheda Budget o modale Spese).
+ */
+function bindCategoryEditorListeners(root) {
+  if (!root) return;
+
+  root.querySelector('[data-add-category]')?.addEventListener('click', async () => {
     const name = uniqueCategoryName('Nuova categoria');
     state.categories.push({
       id: slugCategory(name),
@@ -484,9 +532,10 @@ function bindBudgetControls() {
     });
     await persistCategories();
     render();
+    refreshExpenseCategoriesModalIfOpen();
   });
 
-  document.querySelectorAll('[data-category-name]').forEach((input) => {
+  root.querySelectorAll('[data-category-name]').forEach((input) => {
     input.addEventListener('change', async () => {
       const previousName = input.dataset.categoryName;
       const nextName = input.value.trim();
@@ -509,11 +558,12 @@ function bindBudgetControls() {
       );
       await Promise.all([persistCategories(), saveTransactions(state.transactions)]);
       render();
+      refreshExpenseCategoriesModalIfOpen();
       showToast('Categoria rinominata.');
     });
   });
 
-  document.querySelectorAll('[data-category-goal]').forEach((input) => {
+  root.querySelectorAll('[data-category-goal]').forEach((input) => {
     input.addEventListener('change', async () => {
       const categoryName = input.dataset.categoryGoal;
       state.categories = state.categories.map((category) =>
@@ -525,7 +575,8 @@ function bindBudgetControls() {
           : category,
       );
       await persistCategories();
-      renderBudget();
+      render();
+      refreshExpenseCategoriesModalIfOpen();
       showToast('Obiettivo categoria aggiornato.');
     });
   });

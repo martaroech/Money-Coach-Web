@@ -69,6 +69,14 @@
       </section>
 
       <section id="expensesPage" class="page" aria-labelledby="expensesTitle">
+        <div class="d-flex justify-content-end mb-2">
+          <button
+            id="openExpenseCategoriesModal"
+            type="button"
+            class="btn btn-brand-soft btn-sm fw-bold">
+            <i class="fa-solid fa-tags me-2"></i>Gestisci categorie
+          </button>
+        </div>
         <div class="toolbar-stack">
           <div class="input-group search-box">
             <span class="input-group-text border-0 bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
@@ -185,6 +193,27 @@
               </button>
               <button type="button" class="btn btn-brand btn-sm fw-bold px-4" data-bs-dismiss="modal">Fatto</button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade modal-period-money"
+      id="expenseCategoriesModal"
+      tabindex="-1"
+      aria-labelledby="expenseCategoriesModalTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable px-3">
+        <div class="modal-content border-0 shadow mc-categories-modal">
+          <div class="modal-header border-0 pb-0">
+            <h2 class="modal-title h5 fw-bold" id="expenseCategoriesModalTitle">Categorie di spesa</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+          </div>
+          <div class="modal-body pt-2 pb-1" id="expenseCategoriesModalBody"></div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-brand btn-sm fw-bold px-4" data-bs-dismiss="modal">Fatto</button>
           </div>
         </div>
       </div>

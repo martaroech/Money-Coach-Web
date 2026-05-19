@@ -122,7 +122,7 @@ export function categoryEditor(categories) {
           <strong>Categorie e obiettivi</strong>
           <small class="d-block text-secondary">Modifica limite mensile o crea una categoria.</small>
         </div>
-        <button class="btn btn-brand-soft btn-sm" type="button" id="addCategoryButton" aria-label="Aggiungi categoria">
+        <button class="btn btn-brand-soft btn-sm" type="button" data-add-category aria-label="Aggiungi categoria">
           <i class="fa-solid fa-plus"></i>
         </button>
       </div>

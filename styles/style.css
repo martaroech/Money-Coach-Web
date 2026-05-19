@@ -613,3 +613,16 @@ body.mc-modal-blur-active .modal-backdrop.show {
   --bs-btn-color: #fff;
   --bs-btn-hover-color: #fff;
 }
+.mc-categories-modal {
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+}
+.mc-categories-modal .modal-body {
+  max-height: min(62vh, 440px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mc-categories-modal .category-editor-row {
+  grid-template-columns: 42px minmax(0, 1fr) 88px;
+}
