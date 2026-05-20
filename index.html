@@ -53,15 +53,15 @@
           </button>
         </div>
 
-        <div id="metricGrid" class="row g-2 mt-3"></div>
+        <div id="metricGrid" class="row g-2 mt-1 mb-2"></div>
 
-        <div class="section-heading d-flex align-items-end justify-content-between gap-3 mb-2">
+        <div class="section-heading d-flex align-items-end justify-content-between gap-3 mt-3 mb-2">
           <h2>Categorie</h2>
           <span id="categoryCount" class="badge rounded-pill text-bg-light">In attesa</span>
         </div>
         <div id="categoryBreakdown" class="d-grid gap-2"></div>
 
-        <div class="section-heading d-flex align-items-end justify-content-between gap-3 mt-4 mb-2">
+        <div class="section-heading d-flex align-items-end justify-content-between gap-3 mt-3 mb-2">
           <h2>Coach</h2>
           <span id="coachCount" class="badge rounded-pill text-bg-light">0 note</span>
         </div>
@@ -69,18 +69,18 @@
       </section>
 
       <section id="expensesPage" class="page" aria-labelledby="expensesTitle">
-        <div class="d-flex justify-content-end mb-2">
-          <button
-            id="openExpenseCategoriesModal"
-            type="button"
-            class="btn btn-brand-soft btn-sm fw-bold">
-            <i class="fa-solid fa-tags me-2"></i>Gestisci categorie
-          </button>
-        </div>
         <div class="d-grid gap-3 mb-4">
-          <div class="input-group search-box">
-            <span class="input-group-text border-0 bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
-            <input id="expenseSearch" class="form-control border-0 shadow-none" type="search" placeholder="Cerca spesa, categoria o importo" autocomplete="off">
+          <div class="d-flex gap-2">
+            <div class="input-group search-box">
+              <span class="input-group-text border-0 bg-white"><i class="fa-solid fa-magnifying-glass"></i></span>
+              <input id="expenseSearch" class="form-control border-0 shadow-none" type="search" placeholder="Cerca..." autocomplete="off">
+            </div>
+            <button
+              id="openExpenseCategoriesModal"
+              type="button"
+              class="btn btn-brand-soft btn-sm fw-bold d-flex align-items-center justify-content-center">
+              <i class="fa-solid fa-tags me-2"></i><span>Categorie</span>
+            </button>
           </div>
           <div class="nav nav-pills nav-fill segmented" role="tablist" aria-label="Vista spese">
             <button class="nav-link active" type="button" data-view="grouped">Gruppi</button>

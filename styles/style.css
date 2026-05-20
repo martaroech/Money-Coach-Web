@@ -150,8 +150,6 @@ input {
 .search-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 14px;
   border-radius: 8px;
   background: #ffffff;
 }
@@ -183,6 +181,9 @@ input {
 .segmented button.active {
   background: #f1cdd3;
   color: #b80022;
+}
+#openExpenseCategoriesModal {
+  border-radius: 8px;
 }
 .chip {
   flex: 0 0 auto;
@@ -224,6 +225,7 @@ input {
   flex: 0 0 auto;
   place-items: center;
   border-radius: 8px;
+  align-self: center;
 }
 .group-title,
 .transaction-main,
@@ -388,6 +390,12 @@ input {
 .category-editor-row__goal-input {
   width: 4.25rem;
   max-width: 100%;
+}
+.category-editor-row--deletable .category-editor-row__del {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
 }
 .category-editor-row--deletable .category-editor-row__del .fa-trash-can {
   font-size: 16px;
